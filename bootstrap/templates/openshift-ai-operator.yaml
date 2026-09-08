@@ -19,7 +19,7 @@ spec:
       valueFiles:
         - $values/deployments/openshift-ai-operator/values.yaml
   - repoURL: {{ .Values.bootstrap.repoURL }}
-    targetRevision: {{ .Values.bootstrap.targetRevision }}
+#    targetRevision: {{ .Values.bootstrap.targetRevision }}
     ref: values
   syncPolicy:
     automated:
