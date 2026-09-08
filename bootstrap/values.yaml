@@ -3,9 +3,9 @@
 
 bootstrap:
   # Git repository URL
-  repoURL: https://github.com/rhpds/agentops-in-prod-automation
+  repoURL: https://github.com/dieterdm/agentops-in-prod-automation
   # Branch or tag to use
-  targetRevision: v1.0.1
+  # targetRevision: v1.0.1
 
 user:
   count: 1
