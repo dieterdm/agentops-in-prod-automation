@@ -10,5 +10,6 @@ spec:
       requests:
         storage: {{ .Values.mlflow.storage.size }}
   backendStoreUri: {{ .Values.mlflow.backend.storeUri | quote }}
-  artifactsDestination: {{ .Values.mlflow.artifacts.destination | quote }}
+  # artifactsDestination: {{ .Values.mlflow.artifacts.destination | quote }}
+  defaultArtifactRoot: {{ .Values.mlflow.artifacts.destination | quote }}
   serveArtifacts: {{ .Values.mlflow.artifacts.serve }}
