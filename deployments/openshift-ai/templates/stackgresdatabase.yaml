@@ -10,8 +10,7 @@ spec:
         CREATE DATABASE maas;
         CREATE USER "maas_user" WITH PASSWORD 'MySuperSecretPassword123!';
         GRANT ALL PRIVILEGES ON DATABASE maas TO maas_user;
-        \c maas
-        GRANT ALL ON SCHEMA public TO maas_user;
+        ALTER DATABASE maas OWNER TO maas_user;
 ---
 apiVersion: stackgres.io/v1
 kind: SGCluster 
