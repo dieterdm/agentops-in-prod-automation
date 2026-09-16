@@ -36,6 +36,10 @@ dataScienceCluster:
       managementState: Managed
     aipipelines:
       managementState: Managed
+    aigateway:
+      managementState: Managed
+      modelsAsAService:
+        managementState: Managed
 
 dataScienceClusterInitialization: null
 

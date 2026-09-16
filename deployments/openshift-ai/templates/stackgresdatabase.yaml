@@ -4,7 +4,6 @@ metadata:
   name: create-maas-db-script
   namespace: redhat-ods-applications
 spec:
-  database: postgres
   scripts:
     - name: create-maas-db
       script: |

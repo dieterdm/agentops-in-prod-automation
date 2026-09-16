@@ -27,6 +27,10 @@ spec:
       kind: DataScienceCluster
       jsonPointers:
         - /spec/components
+    - group: stackgres.io
+      kind: SGCluster
+      jsonPointers:
+        - /spec/managedSql/scripts
   syncPolicy:
     automated:
       prune: true
