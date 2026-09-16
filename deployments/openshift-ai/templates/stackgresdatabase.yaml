@@ -7,7 +7,6 @@ spec:
   database: postgres
   scripts:
     - name: create-maas-db
-      database: postgres
       script: |
         CREATE DATABASE maas;
         CREATE USER 'maas_user' PASSWORD 'MySuperSecretPassword123!'
