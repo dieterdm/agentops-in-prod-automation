@@ -8,7 +8,7 @@ spec:
     - name: create-maas-db
       script: |
         CREATE DATABASE maas;
-        CREATE USER 'maas_user' PASSWORD 'MySuperSecretPassword123!'
+        CREATE USER 'maas_user' PASSWORD 'MySuperSecretPassword123!';
         GRANT ALL PRIVILEGES ON DATABASE maas TO maas_user;
 ---
 apiVersion: stackgres.io/v1
