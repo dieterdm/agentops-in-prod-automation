@@ -40,6 +40,8 @@ dataScienceCluster:
       managementState: Managed
       modelsAsAService:
         managementState: Managed
+    ogx:
+      managementState: Managed
 
 dataScienceClusterInitialization: null
 
@@ -56,6 +58,7 @@ dashboardConfig:
   disableKServeMetrics: false
   genAiStudio: true
   modelAsService: true
+  externalModels: true
   disableLMEval: false
 
 defaultWorkbenchPvcSize: 20Gi
