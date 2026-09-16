@@ -1,4 +1,18 @@
-
+apiVersion: stackgres.io/v1
+kind: SGScript
+metadata:
+  name: create-maas-db-script
+  namespace: redhat-ods-applications
+spec:
+  database: postgres
+  scripts:
+    - name: create-maas-db
+      database: postgres
+      script: |
+        CREATE DATABASE maas;
+        CREATE USER 'maas_user' PASSWORD 'MySuperSecretPassword123!'
+        GRANT ALL PRIVILEGES ON DATABASE maas TO maas_user;
+---
 apiVersion: stackgres.io/v1
 kind: SGCluster 
 metadata:
@@ -11,3 +25,6 @@ spec:
   pods:
     persistentVolume:
       size: '10Gi'
+  managedSql:
+    scripts:
+      - sgScript: create-maas-db-script
