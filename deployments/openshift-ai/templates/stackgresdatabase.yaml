@@ -1,13 +1,16 @@
 apiVersion: stackgres.io/v1
 kind: SGScript
 metadata:
-  name: create-maas-db
+  name: create-maas-db-script
   namespace: redhat-ods-applications
 spec:
   database: postgres
-  script: |
-    CREATE DATABASE maas;
-    GRANT ALL PRIVILEGES ON DATABASE maas to maas_user;
+  scripts:
+    - name: create-maas-db
+      database: postgres
+      script: |
+        CREATE DATABASE maas;
+        GRANT ALL PRIVILEGES ON DATABASE maas TO maas_user;
 ---
 apiVersion: stackgres.io/v1
 kind: SGCluster
@@ -18,14 +21,14 @@ spec:
   instances: 1
   postgres:
     version: '15'
-  serSecrets:
+  userSecrets:
     - maas-db-user-secret
   pods:
     persistentVolume:
       size: '10Gi'
-  initialData:
+  managedSql:
     scripts:
-      - sgScript: create-maas-db
+      - sgScript: create-maas-db-script
 ---
 apiVersion: v1
 kind: Secret
