@@ -31,6 +31,8 @@ dataScienceCluster:
       managementState: Removed
     feastoperator: {}
     llamastackoperator:
+      managementState: Removed
+    ogx:
       managementState: Managed
     mlflowoperator:
       managementState: Managed
@@ -40,8 +42,7 @@ dataScienceCluster:
       managementState: Managed
       modelsAsAService:
         managementState: Managed
-    ogx:
-      managementState: Managed
+
 
 dataScienceClusterInitialization: null
 
