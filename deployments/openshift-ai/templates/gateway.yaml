@@ -1,24 +1,3 @@
-{{- $ingressConfig := lookup "config.openshift.io/v1" "Ingress" "" "cluster" -}}
-{{- if not $ingressConfig }}
-  {{- fail "Unable to find OpenShift cluster Ingress configuration" -}}
-{{- end }}
-
-{{- $clusterDomain := $ingressConfig.spec.domain -}}
-
-{{- $ingressController := lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default" -}}
-{{- if not $ingressController }}
-  {{- fail "Unable to find OpenShift default IngressController" -}}
-{{- end }}
-
-{{- $certificateName := "" -}}
-{{- if $ingressController.spec.defaultCertificate -}}
-  {{- $certificateName = $ingressController.spec.defaultCertificate.name -}}
-{{- end }}
-
-{{- if not $certificateName -}}
-  {{- fail "OpenShift default IngressController has no defaultCertificate configured" -}}
-{{- end }}
-
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -32,7 +11,7 @@ spec:
 
   listeners:
     - name: http
-      hostname: maas.{{ $clusterDomain }}
+      hostname: maas.{{ .Values.clusterDomain }}
       port: 80
       protocol: HTTP
       allowedRoutes:
@@ -40,7 +19,7 @@ spec:
           from: All
 
     - name: https
-      hostname: maas.{{ $clusterDomain }}
+      hostname: maas.{{ .Values.clusterDomain }}
       port: 443
       protocol: HTTPS
       allowedRoutes:
@@ -51,4 +30,4 @@ spec:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: {{ $certificateName }}
+            name: "{{ .Values.cert }}"

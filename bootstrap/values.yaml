@@ -20,3 +20,12 @@ remotellm:
 deployer:
   apiUrl: https://api.cluster-guid.sandbox.opentlc.com:6443
   domain: apps.cluster-guid.sandbox.opentlc.com
+
+openshiftai:
+  clusterDomain: apps.rosa.test.uhxi.p3.openshiftapps.com
+  cert: 2ss335tbk1bbsq7q2hom3i83k8j45t6l-primary-cert-bundle-secret
+  # CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+  # echo $CLUSTER_DOMAIN
+  # Use default ingress cert for HTTPS, or set CERT_NAME to your TLS secret name
+  # CERT_NAME=${CERT_NAME:-$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)}
+  #echo $CERT_NAME
