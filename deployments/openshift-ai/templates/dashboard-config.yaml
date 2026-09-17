@@ -1,0 +1,26 @@
+{{- if .Values.dataScienceCluster.create }}
+---
+apiVersion: datasciencecluster.opendatahub.io/{{ .Values.dataScienceCluster.version }}
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  dashboardConfig:
+    disableTracking: false
+    disableModelRegistry: false
+    disableModelCatalog: false
+    disableKServeMetrics: false
+    genAiStudio: true
+    modelAsService: true
+    externalModels: true
+    disableLMEval: false
+  hardwareProfileOrder: []
+  notebookController:
+    enabled: true
+    notebookNamespace: rhods-notebooks
+    pvcSize: 20Gi
+  templateDisablement: []
+  templateOrder: []
+{{- end }}

@@ -53,15 +53,6 @@ admins: []
 userGroups:
   - system:authenticated
 
-dashboardConfig:
-  disableModelRegistry: false
-  disableModelCatalog: false
-  disableKServeMetrics: false
-  genAiStudio: true
-  modelAsService: true
-  externalModels: true
-  disableLMEval: false
-
 defaultWorkbenchPvcSize: 20Gi
 showJupyterInEnabledApplications: true
 notebookIdleCulling:
