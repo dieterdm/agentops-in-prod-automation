@@ -5,6 +5,10 @@ metadata:
     operators.coreos.com/stackgres-community.openshift-operators: ""
   name: stackgres-community
   namespace: openshift-operators
+  # OLM uses inverted status fields, which argoCD confuses?
+  annotations:
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   channel: stable
   installPlanApproval: Automatic
