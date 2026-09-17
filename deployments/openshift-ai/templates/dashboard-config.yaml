@@ -22,6 +22,7 @@ spec:
     modelAsService: true
     externalModels: true
     disableLMEval: false
+    mcpCatalog: true
   hardwareProfileOrder: []
   notebookController:
     enabled: true
