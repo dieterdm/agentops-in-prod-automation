@@ -17,7 +17,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
     - name: https
       hostname: maas.{{ .Values.clusterDomain }}
       port: 443
@@ -31,3 +30,25 @@ spec:
           - group: ""
             kind: Secret
             name: "{{ .Values.cert }}"
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: maas-default-gateway-data-science-gateway-class
+  namespace: openshift-ingress
+  labels:
+    gateway.istio.io/managed: openshift.io-gateway-controller-v1
+    gateway.networking.k8s.io/gateway-class-name: data-science-gateway-class
+    gateway.networking.k8s.io/gateway-name: maas-default-gateway
+spec:
+  host: maas.{{ .Values.clusterDomain }}
+  to:
+    kind: Service
+    name: maas-default-gateway-data-science-gateway-class
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: None
+  wildcardPolicy: None
