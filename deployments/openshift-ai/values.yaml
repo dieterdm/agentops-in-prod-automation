@@ -42,6 +42,8 @@ dataScienceCluster:
       managementState: Managed
       modelsAsAService:
         managementState: Managed
+    mcplifecycleoperator:
+      managementState: Managed
 
 
 dataScienceClusterInitialization: null
@@ -62,3 +64,14 @@ notebookIdleCulling:
 modelServerSizes: null
 
 notebookSizes: null
+
+
+
+# CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+# echo $CLUSTER_DOMAIN
+# Use default ingress cert for HTTPS, or set CERT_NAME to your TLS secret name
+# CERT_NAME=${CERT_NAME:-$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)}
+#echo $CERT_NAME
+
+clusterDomain: needupdate
+cert: needupdate
