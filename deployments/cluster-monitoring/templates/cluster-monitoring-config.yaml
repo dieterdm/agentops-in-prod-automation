@@ -20,3 +20,13 @@ data:
   config.yaml: |
     {{- toYaml . | nindent 4 }}
 {{- end }}
+---
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
+metadata:
+  name: monitoring
+spec:
+  monitoring:
+    perses:
+      enabled: true
+  type: Monitoring
