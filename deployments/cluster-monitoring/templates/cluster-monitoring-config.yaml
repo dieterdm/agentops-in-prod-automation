@@ -30,3 +30,19 @@ spec:
     perses:
       enabled: true
   type: Monitoring
+---
+apiVersion: MaasTenantConfig.opendatahub.io/v1alpha1
+kind: Tenant
+metadata:
+  name: default-tenant
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false
+spec:
+  telemetry:
+    enabled: true
+    metrics:
+      captureOrganization: true
+      captureUser: false
+      captureGroup: false
+      captureModelUsage: true
