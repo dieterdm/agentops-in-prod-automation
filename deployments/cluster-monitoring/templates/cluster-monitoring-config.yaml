@@ -31,8 +31,8 @@ spec:
       enabled: true
   type: Monitoring
 ---
-apiVersion: MaasTenantConfig.opendatahub.io/v1alpha1
-kind: Tenant
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaasTenantConfig
 metadata:
   name: default-tenant
   namespace: models-as-a-service
