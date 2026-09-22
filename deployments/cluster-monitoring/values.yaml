@@ -8,12 +8,3 @@ clusterMonitoringConfig:
         resources:
           requests:
             storage: 40Gi
-userWorkloadMonitoringConfig:
-  prometheus:
-    retention: 72h
-    volumeClaimTemplate:
-      spec:
-        volumeMode: Filesystem
-        resources:
-          requests:
-            storage: 40Gi

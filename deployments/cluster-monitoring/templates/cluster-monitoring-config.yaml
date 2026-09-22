@@ -11,16 +11,6 @@ data:
 {{- end }}
 {{- with .Values.userWorkloadMonitoringConfig }}
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: user-workload-monitoring-config
-  namespace: openshift-user-workload-monitoring
-data:
-  config.yaml: |
-    {{- toYaml . | nindent 4 }}
-{{- end }}
----
 apiVersion: observability.openshift.io/v1alpha1
 kind: UIPlugin
 metadata:
