@@ -23,6 +23,7 @@ spec:
     externalModels: true
     disableLMEval: false
     mcpCatalog: true
+    guardrails: true
   hardwareProfileOrder: []
   notebookController:
     enabled: true
