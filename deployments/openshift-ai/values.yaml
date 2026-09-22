@@ -58,7 +58,7 @@ dataScienceClusterInitialization:
       sampleRatio: "0.1"
       storage:
         backend: pv
-        retention: 10d
+        retention: 120h
 
 acceleratorProfiles: []
 hardwareProfiles: []
