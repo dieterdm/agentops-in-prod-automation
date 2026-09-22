@@ -1,0 +1,8 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: Config
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false
+  name: default
+spec:
+  usageLogging: true
