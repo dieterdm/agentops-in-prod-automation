@@ -46,7 +46,19 @@ dataScienceCluster:
       managementState: Managed
 
 
-dataScienceClusterInitialization: null
+dataScienceClusterInitialization: 
+  monitoring:
+    namespace: redhat-ods-monitoring
+    metrics:
+      replicas: 1
+      storage:
+        size: 5Gi
+        retention: 90d
+    traces:
+      sampleRatio: 0.1
+      storage:
+        backend: pv
+        retention: 216h
 
 acceleratorProfiles: []
 hardwareProfiles: []
