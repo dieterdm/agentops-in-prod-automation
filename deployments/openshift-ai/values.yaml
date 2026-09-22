@@ -53,12 +53,12 @@ dataScienceClusterInitialization:
       replicas: 1
       storage:
         size: 5Gi
-        retention: 90d
+        retention: 10d
     traces:
       sampleRatio: 0.1
       storage:
         backend: pv
-        retention: 216h
+        retention: 10d
 
 acceleratorProfiles: []
 hardwareProfiles: []
