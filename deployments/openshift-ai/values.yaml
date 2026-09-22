@@ -55,7 +55,7 @@ dataScienceClusterInitialization:
         size: 5Gi
         retention: 10d
     traces:
-      sampleRatio: 0.1
+      sampleRatio: "0.1"
       storage:
         backend: pv
         retention: 10d
