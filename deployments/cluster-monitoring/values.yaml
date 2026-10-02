@@ -1,10 +1,1 @@
-clusterMonitoringConfig:
-  enableUserWorkload: true
-  prometheusK8s:
-    retention: 168h
-    volumeClaimTemplate:
-      spec:
-        volumeMode: Filesystem
-        resources:
-          requests:
-            storage: 40Gi
+{}
