@@ -11,28 +11,37 @@ GitOps automation for deploying the **AgentOps in Production: Agentic End-to-End
 
 ## Architecture
 
-This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart generates ArgoCD Applications that deploy the full stack per user.
+This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart generates ArgoCD Applications that deploy the full stack.
 
 ```
 bootstrap/                         # ArgoCD app-of-apps parent chart
-├── values.yaml                    # User count, cluster domain, repo URL
+├── values.yaml                    # Cluster domain, repo URL
 └── templates/
     ├── mlflow.yaml                # MLflow tracking server
     ├── openshift-ai-operator.yaml # RHOAI operator
     ├── openshift-ai.yaml          # RHOAI instance
     ├── cluster-monitoring.yaml    # User workload monitoring
+    ├── kuadrant.yaml              # Kuadrant API gateway policies
     ├── logging.yaml               # Cluster logging
+    └── extra-resources/           # Namespaces, operators, RBAC, MCP config
 
 deployments/                       # Individual Helm charts
-├── mortgage-ai/                   # Full mortgage-ai stack (API, UI, DB, Keycloak, MinIO, LlamaStack)
-├── workspace/                     # Per-user namespace, RBAC, LLM secrets
-├── grafana/                       # Grafana operator, dashboards, datasources
-├── mlflow/                        # MLflow tracking server
-├── minio/                         # MinIO object storage
-├── dspa/                          # Data Science Pipelines Application
-├── openshift-ai/                  # RHOAI DataScienceCluster
-├── openshift-ai-operator/         # RHOAI operator subscription
 ├── cluster-monitoring/            # OpenShift monitoring config
+├── kuadrant/                      # Kuadrant operator and gateway policies
 ├── logging/                       # Cluster logging stack
-└── image-puller/                  # DaemonSet for pre-pulling notebook images
+├── mlflow/                        # MLflow tracking server
+├── openshift-ai/                  # RHOAI DataScienceCluster
+└── openshift-ai-operator/         # RHOAI operator subscription
+```
+
+## Configuration
+
+Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
+
+```bash
+CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+echo $CLUSTER_DOMAIN
+
+CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)
+echo $CERT_NAME
 ```

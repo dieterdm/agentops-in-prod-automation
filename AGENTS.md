@@ -10,8 +10,6 @@ The `bootstrap/template` folder contains a YAML file for each subfolder in the `
 This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart generates ArgoCD Applications that deploy the full stack per user.
 
 ## What Gets Deployed
-Each workshop user (`user1`..`userN`) gets an isolated namespace (`wksp-userX`) with:
-
 - **Kuadrant**: Network policies and rate limiting for the mortgage-ai application (deployed in `openshift-gitops` namespace)
 
 ## Deployment Scope
