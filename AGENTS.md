@@ -21,4 +21,3 @@ All Applications and ApplicationSets in this repository are deployed to the `ope
 - **Grafana dashboards**: LLM token usage, inference latency, agent performance metrics
 - **Data Science Pipelines**: Kubeflow Pipelines for ML workflows
 - **OpenShift AI**: Model serving, notebooks, and platform ML tooling
-
