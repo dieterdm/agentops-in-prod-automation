@@ -6,6 +6,9 @@ metadata:
   namespace: models-as-a-service
   labels:
     inference.llm-d.ai/ipp-managed: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 stringData:
   api-key: {{ .Values.maas_external_provider.api_key }}
 type: Opaque
@@ -15,6 +18,9 @@ kind: ExternalProvider
 metadata:
   name: openai-provider
   namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   provider: openai
   endpoint: {{ .Values.maas_external_provider.endpoint }}
@@ -28,6 +34,9 @@ kind: ExternalModel
 metadata:
   name: gpt-oss-20b
   namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   externalProviderRefs:
   - ref:
@@ -42,6 +51,9 @@ kind: MaaSModelRef
 metadata:
   name: gpt-oss-20b
   namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   modelRef:
     kind: ExternalModel

@@ -37,6 +37,7 @@ deployments/                       # Individual Helm charts
 ## Prerequisites
 
 - Red Hat OpenShift GitOps installed on the cluster
+- User `dieter` must exist on the cluster
 - An S3-compatible bucket for LokiStack logging storage. You can create one using OpenShift Data Foundation:
 
 ```yaml
