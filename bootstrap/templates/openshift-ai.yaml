@@ -19,6 +19,12 @@ spec:
       valuesObject:
         clusterDomain: "{{ .Values.openshiftai.clusterDomain }}"
         cert: "{{ .Values.openshiftai.cert }}"
+        maas_external_provider:
+          enabled: {{ .Values.maas_external_provider.enabled }}
+          {{- if .Values.maas_external_provider.enabled }}
+          api_key: "{{ .Values.maas_external_provider.api_key }}"
+          endpoint: "{{ .Values.maas_external_provider.endpoint }}"
+          {{- end }}
   ignoreDifferences:
     - group: datasciencecluster.opendatahub.io
       kind: DataScienceCluster

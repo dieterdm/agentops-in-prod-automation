@@ -81,3 +81,8 @@ notebookSizes: null
 
 clusterDomain: needupdate
 cert: needupdate
+
+maas_external_provider:
+  enabled: false
+  api_key: needupdate
+  endpoint: needupdate

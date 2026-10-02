@@ -1,0 +1,49 @@
+{{- if .Values.maas_external_provider.enabled }}
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openai-provider-creds
+  namespace: models-as-a-service
+  labels:
+    inference.llm-d.ai/ipp-managed: "true"
+stringData:
+  api-key: {{ .Values.maas_external_provider.api_key }}
+type: Opaque
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalProvider
+metadata:
+  name: openai-provider
+  namespace: models-as-a-service
+spec:
+  provider: openai
+  endpoint: {{ .Values.maas_external_provider.endpoint }}
+  auth:
+    type: apikey
+    secretRef:
+      name: openai-provider-creds
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: gpt-oss-20b
+  namespace: models-as-a-service
+spec:
+  externalProviderRefs:
+  - ref:
+      name: openai-provider
+    targetModel: gpt-oss-20b
+    apiFormat: openai-chat
+    path: /v1/chat/completions
+    weight: 100
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: gpt-oss-20b
+  namespace: models-as-a-service
+spec:
+  modelRef:
+    kind: ExternalModel
+    name: gpt-oss-20b
+{{- end }}

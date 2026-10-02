@@ -7,6 +7,9 @@ bootstrap:
   # Branch or tag to use
   targetRevision: opencode
 
+maas_external_provider:
+  enabled: true
+
 openshiftai:
   clusterDomain: apps.rhoai.apps.ocp4-bm.redhat.arrowlabs.be
   cert: default-ingress-cert

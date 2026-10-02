@@ -63,7 +63,7 @@ Sensitive values (S3 credentials) are kept in a separate file that is not checke
 
 ```bash
 cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
-# Edit bootstrap/values.secret.yaml with your S3 bucket credentials
+# Edit bootstrap/values.secret.yaml with your S3 bucket credentials and other secrets
 ```
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
@@ -75,6 +75,12 @@ echo $CLUSTER_DOMAIN
 CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)
 echo $CERT_NAME
 ```
+
+### External model provider (optional)
+
+If your cluster does not have GPU access, you can configure MaaS to use an external model provider instead. Set `maas_external_provider.enabled: true` in `bootstrap/values.yaml` and provide the API key and endpoint in `bootstrap/values.secret.yaml`.
+
+You can create an external model on the Red Hat MaaS platform at https://maas-rhdp-frontend.apps.maas.redhatworkshops.io/
 
 ## Deployment
 

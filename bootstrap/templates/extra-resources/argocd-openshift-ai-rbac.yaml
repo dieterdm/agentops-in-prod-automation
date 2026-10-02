@@ -64,10 +64,24 @@ rules:
   - patch
   - delete
 - apiGroups:
+  - inference.opendatahub.io
+  resources:
+  - externalproviders
+  - externalmodels
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
   - maas.opendatahub.io
   resources:
   - configs
   - maastenantconfigs
+  - maasmodelrefs
   verbs:
   - get
   - list
@@ -105,6 +119,18 @@ rules:
   resources:
   - routes
   - routes/custom-host
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - mlflow.opendatahub.io
+  resources:
+  - mlflows
   verbs:
   - get
   - list
