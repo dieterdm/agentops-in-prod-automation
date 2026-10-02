@@ -5,6 +5,8 @@ kind: ConfigMap
 metadata:
   name: cluster-monitoring-config
   namespace: openshift-monitoring
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false
 data:
   config.yaml: |
     {{- toYaml . | nindent 4 }}

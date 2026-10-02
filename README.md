@@ -58,3 +58,9 @@ Deploy the bootstrap Helm chart to kick off the app-of-apps:
 oc project default
 helm install bootstrap ./bootstrap -f ./bootstrap/values.yaml
 ```
+
+To apply changes after modifying values or templates:
+
+```bash
+helm upgrade bootstrap ./bootstrap -f ./bootstrap/values.yaml
+```
