@@ -15,6 +15,13 @@ spec:
     path: deployments/logging
     repoURL: {{ .Values.bootstrap.repoURL }}
     targetRevision: {{ .Values.bootstrap.targetRevision }}
+    helm:
+      valuesObject:
+        s3:
+          access_key_id: "{{ .Values.logging_s3_bucket.access_key_id }}"
+          access_key_secret: "{{ .Values.logging_s3_bucket.access_key_secret }}"
+          bucketnames: "{{ .Values.logging_s3_bucket.bucketnames }}"
+          endpoint: "{{ .Values.logging_s3_bucket.endpoint }}"
   syncPolicy:
     automated:
       prune: true

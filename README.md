@@ -37,8 +37,34 @@ deployments/                       # Individual Helm charts
 ## Prerequisites
 
 - Red Hat OpenShift GitOps installed on the cluster
+- An S3-compatible bucket for LokiStack logging storage. You can create one using OpenShift Data Foundation:
+
+```yaml
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: rhoai-logging
+  namespace: clusters-rhoai
+  labels:
+    app: noobaa
+    bucket-provisioner: openshift-storage.noobaa.io-obc
+    noobaa-domain: openshift-storage.noobaa.io
+spec:
+  additionalConfig:
+    bucketclass: noobaa-default-bucket-class
+  generateBucketName: rhoai-logging
+  objectBucketName: obc-clusters-rhoai-rhoai-logging
+  storageClassName: openshift-storage.noobaa.io
+```
 
 ## Configuration
+
+Sensitive values (S3 credentials) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
+
+```bash
+cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
+# Edit bootstrap/values.secret.yaml with your S3 bucket credentials
+```
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
 
@@ -56,11 +82,11 @@ Deploy the bootstrap Helm chart to kick off the app-of-apps:
 
 ```bash
 oc project default
-helm install bootstrap ./bootstrap -f ./bootstrap/values.yaml
+helm install bootstrap ./bootstrap -f ./bootstrap/values.yaml -f ./bootstrap/values.secret.yaml
 ```
 
 To apply changes after modifying values or templates:
 
 ```bash
-helm upgrade bootstrap ./bootstrap -f ./bootstrap/values.yaml
+helm upgrade bootstrap ./bootstrap -f ./bootstrap/values.yaml -f ./bootstrap/values.secret.yaml
 ```
