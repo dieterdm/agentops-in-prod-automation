@@ -8,5 +8,5 @@ bootstrap:
   targetRevision: opencode
 
 openshiftai:
-  clusterDomain: apps.rosa.test.uhxi.p3.openshiftapps.com
-  cert: 2ss335tbk1bbsq7q2hom3i83k8j45t6l-primary-cert-bundle-secret
+  clusterDomain: apps.rhoai.apps.ocp4-bm.redhat.arrowlabs.be
+  cert: default-ingress-cert

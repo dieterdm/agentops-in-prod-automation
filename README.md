@@ -34,6 +34,10 @@ deployments/                       # Individual Helm charts
 └── openshift-ai-operator/         # RHOAI operator subscription
 ```
 
+## Prerequisites
+
+- Red Hat OpenShift GitOps installed on the cluster
+
 ## Configuration
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
@@ -44,4 +48,13 @@ echo $CLUSTER_DOMAIN
 
 CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)
 echo $CERT_NAME
+```
+
+## Deployment
+
+Deploy the bootstrap Helm chart to kick off the app-of-apps:
+
+```bash
+oc project default
+helm install bootstrap ./bootstrap -f ./bootstrap/values.yaml
 ```

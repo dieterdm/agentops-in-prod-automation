@@ -1,4 +1,1 @@
-templates/mortgage-ai.yaml
-templates/dspa.yaml
-templates/grafana.yaml
-templates/minio.yaml
+templates/extra-resources/gitops.yaml
