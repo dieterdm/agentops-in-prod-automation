@@ -1,0 +1,46 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: maas-default-gateway
+  namespace: openshift-ingress
+  annotations:
+    opendatahub.io/managed: "false"
+    security.opendatahub.io/authorino-tls-bootstrap: "true"
+spec:
+  gatewayClassName: data-science-gateway-class
+  listeners:
+    - name: https
+      hostname: maas.{{ .Values.clusterDomain }}
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: "{{ .Values.cert }}"
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: maas-default-gateway-data-science-gateway-class
+  namespace: openshift-ingress
+  labels:
+    gateway.istio.io/managed: openshift.io-gateway-controller-v1
+    gateway.networking.k8s.io/gateway-class-name: data-science-gateway-class
+    gateway.networking.k8s.io/gateway-name: maas-default-gateway
+spec:
+  host: maas.{{ .Values.clusterDomain }}
+  to:
+    kind: Service
+    name: maas-default-gateway-data-science-gateway-class
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: passthrough
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

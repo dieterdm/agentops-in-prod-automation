@@ -9,14 +9,29 @@ data:
   config.yaml: |
     {{- toYaml . | nindent 4 }}
 {{- end }}
-{{- with .Values.userWorkloadMonitoringConfig }}
 ---
-apiVersion: v1
-kind: ConfigMap
+apiVersion: observability.openshift.io/v1alpha1
+kind: UIPlugin
 metadata:
-  name: user-workload-monitoring-config
-  namespace: openshift-user-workload-monitoring
-data:
-  config.yaml: |
-    {{- toYaml . | nindent 4 }}
-{{- end }}
+  name: monitoring
+spec:
+  monitoring:
+    perses:
+      enabled: true
+  type: Monitoring
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaasTenantConfig
+metadata:
+  name: default-tenant
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false
+spec:
+  telemetry:
+    enabled: true
+    metrics:
+      captureOrganization: true
+      captureUser: true
+      captureGroup: true
+      captureModelUsage: true

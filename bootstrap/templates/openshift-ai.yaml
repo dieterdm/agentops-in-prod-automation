@@ -17,16 +17,17 @@ spec:
     targetRevision: {{ .Values.bootstrap.targetRevision }}
     helm:
       valuesObject:
-        admins:
-          - "{{ .Values.user.prefix }}"
-          {{- range $i := until (int .Values.user.count) }}
-          - "{{ $.Values.user.prefix }}{{ add $i 1 }}"
-          {{- end }}
+        clusterDomain: "{{ .Values.openshiftai.clusterDomain }}"
+        cert: "{{ .Values.openshiftai.cert }}"
   ignoreDifferences:
     - group: datasciencecluster.opendatahub.io
       kind: DataScienceCluster
       jsonPointers:
         - /spec/components
+    - group: stackgres.io
+      kind: SGCluster
+      jsonPointers:
+        - /spec/managedSql/scripts
   syncPolicy:
     automated:
       prune: true

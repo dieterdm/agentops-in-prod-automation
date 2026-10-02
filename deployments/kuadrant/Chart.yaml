@@ -1,0 +1,4 @@
+apiVersion: v2
+name: kuadrant
+version: 0.1.0
+description: Kuadrant operator deployment

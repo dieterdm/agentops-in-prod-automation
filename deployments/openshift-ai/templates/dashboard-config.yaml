@@ -1,0 +1,34 @@
+{{- if .Values.dataScienceCluster.create }}
+---
+apiVersion: opendatahub.io/v1alpha
+kind: OdhDashboardConfig
+metadata:
+  name: odh-dashboard-config
+  namespace: redhat-ods-applications
+  labels:
+    app: rhods-dashboard
+    app.kubernetes.io/part-of: rhods-dashboard
+    app.opendatahub.io/rhods-dashboard: 'true'
+    platform.opendatahub.io/part-of: dashboard
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  dashboardConfig:
+    disableTracking: false
+    disableModelRegistry: false
+    disableModelCatalog: false
+    disableKServeMetrics: false
+    genAiStudio: true
+    modelAsService: true
+    externalModels: true
+    disableLMEval: false
+    mcpCatalog: true
+    guardrails: true
+  hardwareProfileOrder: []
+  notebookController:
+    enabled: true
+    notebookNamespace: rhods-notebooks
+    pvcSize: 20Gi
+  templateDisablement: []
+  templateOrder: []
+{{- end }}
