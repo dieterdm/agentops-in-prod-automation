@@ -13,6 +13,6 @@ spec:
       - name: authorino
         env:
         - name: SSL_CERT_FILE
-          value: /etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
+          value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
         - name: REQUESTS_CA_BUNDLE
-          value: /etc/ssl/certs/openshift-service-ca/service-ca-bundle.crt
+          value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
