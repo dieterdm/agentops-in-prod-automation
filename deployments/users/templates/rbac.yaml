@@ -17,3 +17,14 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: openshift-gitops
+data:
+  policy.csv: |
+    g, dieter, role:admin
+    g, system:cluster-admins, role:admin
+    g, cluster-admins, role:admin
