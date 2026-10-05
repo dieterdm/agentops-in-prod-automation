@@ -12,3 +12,5 @@ spec:
       g, system:cluster-admins, role:admin
       g, cluster-admins, role:admin
       g, dieter, role:admin
+    scopes: '[groups,email]'
+    # scope needs to be email in order to accept 'dieter' as a user
