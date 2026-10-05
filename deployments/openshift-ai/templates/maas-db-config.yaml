@@ -3,5 +3,5 @@ stringData:
   DB_CONNECTION_URL: 'postgresql://maas_user:MySuperSecretPassword123!@simple-db.redhat-ods-applications.svc.cluster.local:5432/maas?sslmode=require'
 kind: Secret
 metadata:
-  name: maas-db-config
+  name: redhat-ai-gateway-infra
   namespace: redhat-ods-applications
