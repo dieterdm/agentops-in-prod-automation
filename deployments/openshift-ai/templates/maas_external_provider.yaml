@@ -58,4 +58,36 @@ spec:
   modelRef:
     kind: ExternalModel
     name: gpt-oss-20b
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: maas-subscription-policy
+  namespace: models-as-a-service
+spec:
+  modelRefs:
+  - name: gpt-oss-20b
+    namespace: models-as-a-service
+  subjects:
+    groups:
+    - name: cluster-admins
+    - name: rhods-admins
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: maas-subscription
+  namespace: models-as-a-service
+spec:
+  modelRefs:
+  - name: gpt-oss-20b
+    namespace: models-as-a-service
+    tokenRateLimits:
+    - limit: 1000
+      window: 1s
+  owner:
+    groups:
+    - name: cluster-admins
+    - name: rhods-admins
+  priority: 0
 {{- end }}
