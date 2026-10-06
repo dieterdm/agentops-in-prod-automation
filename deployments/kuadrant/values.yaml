@@ -1,6 +1,1 @@
-replicaCount: 1
-
-image:
-  repository: quay.io/kuadrant/kuadrant-operator
-  tag: latest
-  pullPolicy: IfNotPresent
+{}

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: Logging
+name: logging
 description: >
   A helm chart to deploy LokiStack logging with S3 storage for OpenShift
 type: application

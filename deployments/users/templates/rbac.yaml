@@ -3,24 +3,30 @@ kind: Group
 metadata:
   name: rhods-admins
 users:
-- dieter
+{{- range .Values.clusterAdmins }}
+- {{ . }}
+{{- end }}
 ---
 apiVersion: user.openshift.io/v1
 kind: Group
 metadata:
   name: cluster-admins
 users:
-- dieter
+{{- range .Values.clusterAdmins }}
+- {{ . }}
+{{- end }}
+{{- range .Values.clusterAdmins }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: dieter-cluster-admin
+  name: {{ . }}-cluster-admin
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: dieter
+  name: {{ . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
+{{- end }}

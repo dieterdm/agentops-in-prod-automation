@@ -15,6 +15,12 @@ spec:
     path: deployments/users
     repoURL: {{ .Values.bootstrap.repoURL }}
     targetRevision: {{ .Values.bootstrap.targetRevision }}
+    helm:
+      valuesObject:
+        clusterAdmins:
+{{- range .Values.users.clusterAdmins }}
+          - {{ . }}
+{{- end }}
   syncPolicy:
     automated:
       prune: true

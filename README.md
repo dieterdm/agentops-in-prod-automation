@@ -15,7 +15,7 @@ This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart g
 
 ```
 bootstrap/                         # ArgoCD app-of-apps parent chart
-├── values.yaml                    # Cluster domain, repo URL
+├── values.yaml                    # Cluster domain, repo URL, admin users
 └── templates/
     ├── mlflow.yaml                # MLflow tracking server
     ├── openshift-ai-operator.yaml # RHOAI operator
@@ -23,6 +23,7 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── cluster-monitoring.yaml    # User workload monitoring
     ├── kuadrant.yaml              # Kuadrant API gateway policies
     ├── logging.yaml               # Cluster logging
+    ├── users.yaml                 # Cluster administrators
     └── extra-resources/           # Namespaces, operators, RBAC, MCP config
 
 deployments/                       # Individual Helm charts
@@ -31,13 +32,14 @@ deployments/                       # Individual Helm charts
 ├── logging/                       # Cluster logging stack
 ├── mlflow/                        # MLflow tracking server
 ├── openshift-ai/                  # RHOAI DataScienceCluster
-└── openshift-ai-operator/         # RHOAI operator subscription
+├── openshift-ai-operator/         # RHOAI operator subscription
+└── users/                         # Admin groups and RBAC
 ```
 
 ## Prerequisites
 
 - Red Hat OpenShift GitOps installed on the cluster
-- User `dieter` must exist on the cluster
+- Every user listed in `users.clusterAdmins` must already exist on the cluster (defaults to `dieter`). See [Cluster administrators](#cluster-administrators).
 - An S3-compatible bucket for LokiStack logging storage. You can create one using OpenShift Data Foundation:
 
 ```yaml
@@ -76,6 +78,18 @@ echo $CLUSTER_DOMAIN
 CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)
 echo $CERT_NAME
 ```
+
+### Cluster administrators
+
+The `users` chart grants administrative access to the users listed in `users.clusterAdmins` in `bootstrap/values.yaml`:
+
+```yaml
+users:
+  clusterAdmins:
+    - dieter
+```
+
+Each listed user is added to the `cluster-admins` and `rhods-admins` groups, bound to the `cluster-admin` ClusterRole, and given the `role:admin` policy in OpenShift GitOps. The users are not created by this chart, so they must already exist on the cluster.
 
 ### Storage class
 

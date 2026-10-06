@@ -1,9 +1,6 @@
 ---
 enableUserTelemetry: false
 
-dashboardReplicas: 1
-operatorReplicas: 1
-
 dataScienceCluster:
   create: true
   version: v2
@@ -64,20 +61,10 @@ acceleratorProfiles: []
 hardwareProfiles: []
 
 admins: []
-userGroups:
-  - system:authenticated
 
-defaultWorkbenchPvcSize: 20Gi
-showJupyterInEnabledApplications: true
 notebookIdleCulling:
   enabled: true
   timeoutInMinutes: 240
-
-modelServerSizes: null
-
-notebookSizes: null
-
-
 
 clusterDomain: needupdate
 cert: needupdate

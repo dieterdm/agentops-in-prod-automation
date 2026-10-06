@@ -11,6 +11,12 @@ logging:
   # Storage class used by the LokiStack PVCs
   storageClassName: kubevirt-csi-infra-default
 
+users:
+  # Users granted cluster-admin, OpenShift AI admin and ArgoCD admin rights.
+  # These users must already exist on the cluster.
+  clusterAdmins:
+    - dieter
+
 maas_external_provider:
   enabled: true
 

@@ -11,6 +11,8 @@ spec:
     policy: |
       g, system:cluster-admins, role:admin
       g, cluster-admins, role:admin
-      g, dieter, role:admin
+      {{- range .Values.clusterAdmins }}
+      g, {{ . }}, role:admin
+      {{- end }}
+    # email scope is required for the per-user policy lines to match
     scopes: '[groups,email]'
-    # scope needs to be email in order to accept 'dieter' as a user
