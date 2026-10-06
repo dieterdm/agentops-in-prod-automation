@@ -1,0 +1,8 @@
+apiVersion: v2
+name: mcp-server
+description: >
+  A helm chart to deploy the OpenShift MCP server and register it in the
+  GenAI Studio MCP catalog
+type: application
+version: 0.1.0
+appVersion: 0.1.0

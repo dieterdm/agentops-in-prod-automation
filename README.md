@@ -24,12 +24,14 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── kuadrant.yaml              # Kuadrant API gateway policies
     ├── logging.yaml               # Cluster logging
     ├── users.yaml                 # Cluster administrators
-    └── extra-resources/           # Namespaces, operators, RBAC, MCP config
+    ├── mcp-server.yaml            # OpenShift MCP server
+    └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
 ├── cluster-monitoring/            # OpenShift monitoring config
 ├── kuadrant/                      # Kuadrant operator and gateway policies
 ├── logging/                       # Cluster logging stack
+├── mcp-server/                    # OpenShift MCP server and catalog entry
 ├── mlflow/                        # MLflow tracking server
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription

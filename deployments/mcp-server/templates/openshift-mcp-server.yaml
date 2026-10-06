@@ -48,6 +48,7 @@ metadata:
   annotations:
     mcp.opendatahub.io/catalog-server: openshift-mcp-server
     mcp.opendatahub.io/display-name: OpenShift MCP Server
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   name: openshift-mcp-server
   namespace: models-as-a-service
 spec:
