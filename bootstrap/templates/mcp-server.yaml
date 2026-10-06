@@ -6,8 +6,6 @@ metadata:
   namespace: openshift-gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
 spec:
   destination:
     name: in-cluster
@@ -23,3 +21,11 @@ spec:
       selfHeal: true
     syncOptions:
       - SkipDryRunOnMissingResource=true
+    # The MCPServer CRD is registered by the RHOAI operator, so keep retrying
+    # until the openshift-ai DataScienceCluster has rolled it out.
+    retry:
+      limit: 30
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
