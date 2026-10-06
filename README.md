@@ -77,6 +77,14 @@ CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator 
 echo $CERT_NAME
 ```
 
+### Storage class
+
+LokiStack provisions its PVCs with the storage class set in `logging.storageClassName` in `bootstrap/values.yaml` (default `kubevirt-csi-infra-default`). List the available storage classes and set it to match your cluster:
+
+```bash
+oc get storageclass
+```
+
 ### External model provider (optional)
 
 If your cluster does not have GPU access, you can configure MaaS to use an external model provider instead. Set `maas_external_provider.enabled: true` in `bootstrap/values.yaml` and provide the API key and endpoint in `bootstrap/values.secret.yaml`.

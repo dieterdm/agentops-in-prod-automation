@@ -7,6 +7,10 @@ bootstrap:
   # Branch or tag to use
   targetRevision: opencode
 
+logging:
+  # Storage class used by the LokiStack PVCs
+  storageClassName: kubevirt-csi-infra-default
+
 maas_external_provider:
   enabled: true
 

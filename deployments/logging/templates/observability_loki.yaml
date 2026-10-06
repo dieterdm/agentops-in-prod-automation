@@ -36,6 +36,6 @@ spec:
       credentialMode: static
       name: loki-s3-secret
       type: s3
-  storageClassName: gp3-csi
+  storageClassName: {{ .Values.storageClassName }}
   tenants:
     mode: openshift-logging

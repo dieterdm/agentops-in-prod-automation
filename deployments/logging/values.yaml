@@ -1,3 +1,5 @@
+storageClassName: kubevirt-csi-infra-default
+
 s3:
   access_key_id: needupdate
   access_key_secret: needupdate

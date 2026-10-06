@@ -17,6 +17,7 @@ spec:
     targetRevision: {{ .Values.bootstrap.targetRevision }}
     helm:
       valuesObject:
+        storageClassName: "{{ .Values.logging.storageClassName }}"
         s3:
           access_key_id: "{{ .Values.logging_s3_bucket.access_key_id }}"
           access_key_secret: "{{ .Values.logging_s3_bucket.access_key_secret }}"

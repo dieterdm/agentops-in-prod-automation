@@ -82,6 +82,8 @@ rules:
   - configs
   - maastenantconfigs
   - maasmodelrefs
+  - maassubscriptions
+  - maasauthpolicies
   verbs:
   - get
   - list
@@ -144,6 +146,18 @@ rules:
   resources:
   - sgscripts
   - sgclusters
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - operator.authorino.kuadrant.io
+  resources:
+  - authorinos
   verbs:
   - get
   - list
