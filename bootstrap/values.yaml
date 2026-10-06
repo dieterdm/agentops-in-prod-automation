@@ -21,5 +21,7 @@ maas_external_provider:
   enabled: true
 
 openshiftai:
+  # Subscription channel for the RHOAI operator
+  channel: beta
   clusterDomain: apps.rhoai.apps.ocp4-bm.redhat.arrowlabs.be
   cert: default-ingress-cert

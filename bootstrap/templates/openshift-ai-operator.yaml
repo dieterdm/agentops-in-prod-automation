@@ -15,6 +15,9 @@ spec:
     path: deployments/openshift-ai-operator
     repoURL: {{ .Values.bootstrap.repoURL }}
     targetRevision: {{ .Values.bootstrap.targetRevision }}
+    helm:
+      valuesObject:
+        channel: "{{ .Values.openshiftai.channel }}"
   syncPolicy:
     automated:
       prune: true
