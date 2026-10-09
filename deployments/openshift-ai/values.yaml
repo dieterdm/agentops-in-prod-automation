@@ -1,9 +1,6 @@
 ---
 enableUserTelemetry: false
 
-dashboardReplicas: 1
-operatorReplicas: 1
-
 dataScienceCluster:
   create: true
   version: v2
@@ -64,26 +61,15 @@ acceleratorProfiles: []
 hardwareProfiles: []
 
 admins: []
-userGroups:
-  - system:authenticated
 
-defaultWorkbenchPvcSize: 20Gi
-showJupyterInEnabledApplications: true
 notebookIdleCulling:
   enabled: true
   timeoutInMinutes: 240
 
-modelServerSizes: null
-
-notebookSizes: null
-
-
-
-# CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
-# echo $CLUSTER_DOMAIN
-# Use default ingress cert for HTTPS, or set CERT_NAME to your TLS secret name
-# CERT_NAME=${CERT_NAME:-$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)}
-#echo $CERT_NAME
-
 clusterDomain: needupdate
 cert: needupdate
+
+maas_external_provider:
+  enabled: false
+  api_key: needupdate
+  endpoint: needupdate

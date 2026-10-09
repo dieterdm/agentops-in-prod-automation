@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mcp-viewer
+  namespace: models-as-a-service
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-viewer-view
+subjects:
+- kind: ServiceAccount
+  name: mcp-viewer
+  namespace: models-as-a-service
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-viewer-cluster-reader
+subjects:
+- kind: ServiceAccount
+  name: mcp-viewer
+  namespace: models-as-a-service
+roleRef:
+  kind: ClusterRole
+  name: cluster-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openshift-mcp-server-config
+  namespace: models-as-a-service
+data:
+  config.toml: |
+    log_level = 5
+    port = "8080"
+    read_only = true
+    toolsets = ["core", "config"]
+---
+apiVersion: mcp.x-k8s.io/v1alpha1
+kind: MCPServer
+metadata:
+  annotations:
+    mcp.opendatahub.io/catalog-server: openshift-mcp-server
+    mcp.opendatahub.io/display-name: OpenShift MCP Server
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  name: openshift-mcp-server
+  namespace: models-as-a-service
+spec:
+  config:
+    arguments:
+      - '--config'
+      - /etc/mcp-config/config.toml
+    path: /mcp
+    port: 8080
+    storage:
+      - path: /etc/mcp-config
+        permissions: ReadOnly
+        source:
+          configMap:
+            name: openshift-mcp-server-config
+          type: ConfigMap
+  runtime:
+    security:
+      serviceAccountName: mcp-viewer
+  source:
+    containerImage:
+      ref: 'registry.redhat.io/openshift-mcp-tech-preview/openshift-mcp-server-rhel9:0.4'
+    type: ContainerImage

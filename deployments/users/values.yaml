@@ -1,0 +1,4 @@
+# Users granted cluster-admin and OpenShift AI admin rights.
+# Each user is added to the cluster-admins and rhods-admins groups.
+clusterAdmins:
+  - dieter

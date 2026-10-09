@@ -1,14 +1,69 @@
-{{- with .Values.clusterMonitoringConfig }}
 ---
 apiVersion: v1
-kind: ConfigMap
+kind: ServiceAccount
 metadata:
-  name: cluster-monitoring-config
+  name: cluster-monitoring-config-patcher
   namespace: openshift-monitoring
-data:
-  config.yaml: |
-    {{- toYaml . | nindent 4 }}
-{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-monitoring-config-patcher
+  namespace: openshift-monitoring
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-monitoring-config-patcher
+  namespace: openshift-monitoring
+subjects:
+- kind: ServiceAccount
+  name: cluster-monitoring-config-patcher
+  namespace: openshift-monitoring
+roleRef:
+  kind: Role
+  name: cluster-monitoring-config-patcher
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: patch-cluster-monitoring-config
+  namespace: openshift-monitoring
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      serviceAccountName: cluster-monitoring-config-patcher
+      restartPolicy: OnFailure
+      containers:
+      - name: patch
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          EXISTING=$(oc get configmap cluster-monitoring-config -n openshift-monitoring -o jsonpath='{.data.config\.yaml}' 2>/dev/null || echo "")
+          if echo "$EXISTING" | grep -q "enableUserWorkload"; then
+            echo "enableUserWorkload already set"
+          else
+            if [ -z "$EXISTING" ]; then
+              NEW="enableUserWorkload: true"
+            else
+              NEW="${EXISTING}"$'\n'"enableUserWorkload: true"
+            fi
+            oc create configmap cluster-monitoring-config -n openshift-monitoring \
+              --from-literal="config.yaml=$NEW" \
+              --dry-run=client -o yaml | oc apply -f -
+            echo "enableUserWorkload added"
+          fi
 ---
 apiVersion: observability.openshift.io/v1alpha1
 kind: UIPlugin
@@ -19,19 +74,3 @@ spec:
     perses:
       enabled: true
   type: Monitoring
----
-apiVersion: maas.opendatahub.io/v1alpha1
-kind: MaasTenantConfig
-metadata:
-  name: default-tenant
-  namespace: models-as-a-service
-  annotations:
-    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false
-spec:
-  telemetry:
-    enabled: true
-    metrics:
-      captureOrganization: true
-      captureUser: true
-      captureGroup: true
-      captureModelUsage: true

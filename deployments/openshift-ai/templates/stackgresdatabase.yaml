@@ -3,6 +3,9 @@ kind: SGScript
 metadata:
   name: create-maas-db-script
   namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   scripts:
     - name: create-maas-db
@@ -13,10 +16,13 @@ spec:
         ALTER DATABASE maas OWNER TO maas_user;
 ---
 apiVersion: stackgres.io/v1
-kind: SGCluster 
+kind: SGCluster
 metadata:
   name: simple-db
   namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   instances: 1
   postgres:

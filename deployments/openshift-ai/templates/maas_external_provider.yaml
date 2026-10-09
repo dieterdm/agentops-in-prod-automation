@@ -1,0 +1,99 @@
+{{- if .Values.maas_external_provider.enabled }}
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openai-provider-creds
+  namespace: models-as-a-service
+  labels:
+    inference.llm-d.ai/ipp-managed: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+stringData:
+  api-key: {{ .Values.maas_external_provider.api_key }}
+type: Opaque
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalProvider
+metadata:
+  name: openai-provider
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  provider: openai
+  endpoint: {{ .Values.maas_external_provider.endpoint }}
+  auth:
+    type: apikey
+    secretRef:
+      name: openai-provider-creds
+---
+apiVersion: inference.opendatahub.io/v1alpha1
+kind: ExternalModel
+metadata:
+  name: gpt-oss-20b
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  externalProviderRefs:
+  - ref:
+      name: openai-provider
+    targetModel: gpt-oss-20b
+    apiFormat: openai-chat
+    path: /v1/chat/completions
+    weight: 100
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: gpt-oss-20b
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  modelRef:
+    kind: ExternalModel
+    name: gpt-oss-20b
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: maas-subscription-policy
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  modelRefs:
+  - name: gpt-oss-20b
+    namespace: models-as-a-service
+  subjects:
+    groups:
+    - name: cluster-admins
+    - name: rhods-admins
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: maas-subscription
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  modelRefs:
+  - name: gpt-oss-20b
+    namespace: models-as-a-service
+    tokenRateLimits:
+    - limit: 1000
+      window: 1s
+  owner:
+    groups:
+    - name: cluster-admins
+    - name: rhods-admins
+  priority: 0
+{{- end }}

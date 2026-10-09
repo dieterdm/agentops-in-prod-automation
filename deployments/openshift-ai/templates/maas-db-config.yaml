@@ -4,4 +4,4 @@ stringData:
 kind: Secret
 metadata:
   name: maas-db-config
-  namespace: redhat-ods-applications
+  namespace: redhat-ai-gateway-infra

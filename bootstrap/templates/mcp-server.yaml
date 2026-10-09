@@ -2,30 +2,30 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: openshift-ai-operator
+  name: mcp-server
   namespace: openshift-gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
     name: in-cluster
-    namespace: redhat-ods-operator
+    namespace: models-as-a-service
   project: default
   source:
-    path: deployments/openshift-ai-operator
+    path: deployments/mcp-server
     repoURL: {{ .Values.bootstrap.repoURL }}
     targetRevision: {{ .Values.bootstrap.targetRevision }}
-    helm:
-      valuesObject:
-        channel: "{{ .Values.openshiftai.channel }}"
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
-    managedNamespaceMetadata:
-      annotations:
-        openshift.io/cluster-monitoring: 'true'
-      labels:
-        argocd.argoproj.io/managed-by: openshift-gitops
+      - SkipDryRunOnMissingResource=true
+    # The MCPServer CRD is registered by the RHOAI operator, so keep retrying
+    # until the openshift-ai DataScienceCluster has rolled it out.
+    retry:
+      limit: 30
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

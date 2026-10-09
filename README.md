@@ -11,28 +11,113 @@ GitOps automation for deploying the **AgentOps in Production: Agentic End-to-End
 
 ## Architecture
 
-This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart generates ArgoCD Applications that deploy the full stack per user.
+This repo implements an **app-of-apps** pattern: a single bootstrap Helm chart generates ArgoCD Applications that deploy the full stack.
 
 ```
 bootstrap/                         # ArgoCD app-of-apps parent chart
-├── values.yaml                    # User count, cluster domain, repo URL
+├── values.yaml                    # Cluster domain, repo URL, admin users
 └── templates/
     ├── mlflow.yaml                # MLflow tracking server
     ├── openshift-ai-operator.yaml # RHOAI operator
     ├── openshift-ai.yaml          # RHOAI instance
     ├── cluster-monitoring.yaml    # User workload monitoring
+    ├── kuadrant.yaml              # Kuadrant API gateway policies
     ├── logging.yaml               # Cluster logging
+    ├── users.yaml                 # Cluster administrators
+    ├── mcp-server.yaml            # OpenShift MCP server
+    └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
-├── mortgage-ai/                   # Full mortgage-ai stack (API, UI, DB, Keycloak, MinIO, LlamaStack)
-├── workspace/                     # Per-user namespace, RBAC, LLM secrets
-├── grafana/                       # Grafana operator, dashboards, datasources
+├── cluster-monitoring/            # OpenShift monitoring config
+├── kuadrant/                      # Kuadrant operator and gateway policies
+├── logging/                       # Cluster logging stack
+├── mcp-server/                    # OpenShift MCP server and catalog entry
 ├── mlflow/                        # MLflow tracking server
-├── minio/                         # MinIO object storage
-├── dspa/                          # Data Science Pipelines Application
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription
-├── cluster-monitoring/            # OpenShift monitoring config
-├── logging/                       # Cluster logging stack
-└── image-puller/                  # DaemonSet for pre-pulling notebook images
+└── users/                         # Admin groups and RBAC
+```
+
+## Prerequisites
+
+- Red Hat OpenShift GitOps installed on the cluster
+- Every user listed in `users.clusterAdmins` must already exist on the cluster (defaults to `dieter`). See [Cluster administrators](#cluster-administrators).
+- An S3-compatible bucket for LokiStack logging storage. You can create one using OpenShift Data Foundation:
+
+```yaml
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: rhoai-logging
+  namespace: clusters-rhoai
+  labels:
+    app: noobaa
+    bucket-provisioner: openshift-storage.noobaa.io-obc
+    noobaa-domain: openshift-storage.noobaa.io
+spec:
+  additionalConfig:
+    bucketclass: noobaa-default-bucket-class
+  generateBucketName: rhoai-logging
+  objectBucketName: obc-clusters-rhoai-rhoai-logging
+  storageClassName: openshift-storage.noobaa.io
+```
+
+## Configuration
+
+Sensitive values (S3 credentials) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
+
+```bash
+cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
+# Edit bootstrap/values.secret.yaml with your S3 bucket credentials and other secrets
+```
+
+Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
+
+```bash
+CLUSTER_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}')
+echo $CLUSTER_DOMAIN
+
+CERT_NAME=$(kubectl get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate.name}' 2>/dev/null)
+echo $CERT_NAME
+```
+
+### Cluster administrators
+
+The `users` chart grants administrative access to the users listed in `users.clusterAdmins` in `bootstrap/values.yaml`:
+
+```yaml
+users:
+  clusterAdmins:
+    - dieter
+```
+
+Each listed user is added to the `cluster-admins` and `rhods-admins` groups, bound to the `cluster-admin` ClusterRole, and given the `role:admin` policy in OpenShift GitOps. The users are not created by this chart, so they must already exist on the cluster.
+
+### Storage class
+
+LokiStack provisions its PVCs with the storage class set in `logging.storageClassName` in `bootstrap/values.yaml` (default `kubevirt-csi-infra-default`). List the available storage classes and set it to match your cluster:
+
+```bash
+oc get storageclass
+```
+
+### External model provider (optional)
+
+If your cluster does not have GPU access, you can configure MaaS to use an external model provider instead. Set `maas_external_provider.enabled: true` in `bootstrap/values.yaml` and provide the API key and endpoint in `bootstrap/values.secret.yaml`.
+
+You can create an external model on the Red Hat MaaS platform at https://maas-rhdp-frontend.apps.maas.redhatworkshops.io/
+
+## Deployment
+
+Deploy the bootstrap Helm chart to kick off the app-of-apps:
+
+```bash
+oc project default
+helm install bootstrap ./bootstrap -f ./bootstrap/values.yaml -f ./bootstrap/values.secret.yaml
+```
+
+To apply changes after modifying values or templates:
+
+```bash
+helm upgrade bootstrap ./bootstrap -f ./bootstrap/values.yaml -f ./bootstrap/values.secret.yaml
 ```

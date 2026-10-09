@@ -1,0 +1,16 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaasTenantConfig
+metadata:
+  name: default-tenant
+  namespace: models-as-a-service
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: ServerSideApply=true,FailOnSharedResource=false,SkipDryRunOnMissingResource=true
+spec:
+  telemetry:
+    enabled: true
+    metrics:
+      captureOrganization: true
+      captureUser: true
+      captureGroup: true
+      captureModelUsage: true
