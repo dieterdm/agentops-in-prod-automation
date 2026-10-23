@@ -1,0 +1,116 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: maas-api-restarter
+  namespace: redhat-ods-applications
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-api-restarter
+  namespace: redhat-ods-applications
+rules:
+- apiGroups: ["stackgres.io"]
+  resources: ["sgclusters"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-api-restarter
+  namespace: redhat-ods-applications
+subjects:
+- kind: ServiceAccount
+  name: maas-api-restarter
+  namespace: redhat-ods-applications
+roleRef:
+  kind: Role
+  name: maas-api-restarter
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: maas-api-restarter
+  namespace: redhat-ai-gateway-infra
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  resourceNames: ["maas-api"]
+  verbs: ["patch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: maas-api-restarter
+  namespace: redhat-ai-gateway-infra
+subjects:
+- kind: ServiceAccount
+  name: maas-api-restarter
+  namespace: redhat-ods-applications
+roleRef:
+  kind: Role
+  name: maas-api-restarter
+  apiGroup: rbac.authorization.k8s.io
+---
+# Restarts maas-api once the MaaS database has been created, so it picks up the
+# database connection. This is a regular Job (not a hook) without a TTL: Argo CD
+# creates it on the initial sync and leaves the completed Job in place on later
+# syncs. Delete the Job to run it again.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: maas-api-restart
+  namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  template:
+    spec:
+      serviceAccountName: maas-api-restarter
+      restartPolicy: OnFailure
+      containers:
+      - name: restart
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          DB_NS=redhat-ods-applications
+          MAAS_NS=redhat-ai-gateway-infra
+
+          echo "Waiting for SGCluster simple-db to reference create-maas-db-script"
+          until ID=$(oc get sgcluster simple-db -n "$DB_NS" -o jsonpath='{.spec.managedSql.scripts[?(@.sgScript=="create-maas-db-script")].id}' 2>/dev/null) && [ -n "$ID" ]; do
+            sleep 10
+          done
+
+          echo "Waiting for managed SQL script $ID to complete"
+          while true; do
+            FAILED=$(oc get sgcluster simple-db -n "$DB_NS" -o jsonpath="{.status.managedSql.scripts[?(@.id==$ID)].failedAt}")
+            if [ -n "$FAILED" ]; then
+              echo "create-maas-db-script failed at $FAILED"
+              exit 1
+            fi
+            COMPLETED=$(oc get sgcluster simple-db -n "$DB_NS" -o jsonpath="{.status.managedSql.scripts[?(@.id==$ID)].completedAt}")
+            if [ -n "$COMPLETED" ]; then
+              echo "create-maas-db-script completed at $COMPLETED"
+              break
+            fi
+            sleep 10
+          done
+
+          echo "Waiting for deployment maas-api"
+          until oc get deployment maas-api -n "$MAAS_NS" >/dev/null 2>&1; do
+            sleep 10
+          done
+
+          oc rollout restart deployment/maas-api -n "$MAAS_NS"
+          oc rollout status deployment/maas-api -n "$MAAS_NS" --timeout=10m
