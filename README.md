@@ -93,6 +93,53 @@ users:
 
 Each listed user is added to the `cluster-admins` and `rhods-admins` groups, bound to the `cluster-admin` ClusterRole, and given the `role:admin` policy in OpenShift GitOps. The users are not created by this chart, so they must already exist on the cluster.
 
+#### Hosted control plane (HCP) clusters on OpenShift Virtualization
+
+On a hosted cluster, the user must be created through the `HostedCluster` resource on the infra (hosting) cluster. Replace `<username>` with the user to create and `<cluster-name>` with the name of the hosted cluster.
+
+1. Create an htpasswd file:
+
+   ```bash
+   htpasswd -c -B ./htpasswd-file <username>
+   ```
+
+2. Create the secret in the `clusters` namespace on the infra cluster:
+
+   ```bash
+   oc create secret generic htpasswd-secret --from-file=htpasswd=./htpasswd-file -n clusters
+   ```
+
+3. **Important:** adding an identity provider removes the `kubeadmin` login on the hosted cluster. Before patching, log in to the hosted cluster as `kubeadmin` and give the user cluster-admin rights:
+
+   ```bash
+   oc adm policy add-cluster-role-to-user cluster-admin <username>
+   ```
+
+4. Patch the hosted cluster on the infra cluster to add the htpasswd identity provider:
+
+   ```bash
+   oc patch hostedcluster <cluster-name> -n clusters --type=merge --patch='{
+     "spec": {
+       "configuration": {
+         "oauth": {
+           "identityProviders": [
+             {
+               "name": "htpasswd-provider",
+               "mappingMethod": "claim",
+               "type": "HTPasswd",
+               "htpasswd": {
+                 "fileData": {
+                   "name": "htpasswd-secret"
+                 }
+               }
+             }
+           ]
+         }
+       }
+     }
+   }'
+   ```
+
 ### Storage class
 
 LokiStack provisions its PVCs with the storage class set in `logging.storageClassName` in `bootstrap/values.yaml` (default `kubevirt-csi-infra-default`). List the available storage classes and set it to match your cluster:
