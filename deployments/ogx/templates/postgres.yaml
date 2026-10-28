@@ -10,6 +10,22 @@ stringData:
   POSTGRES_PASSWORD: database-password
 
 ---
+# Connection details for the OGXServer pgvector provider. Keep these in sync
+# with pgvector-postgresql-credentials-secret and the pgvector-postgres Service.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pgvector-connection
+  namespace: ogx
+type: Opaque
+stringData:
+  PGVECTOR_HOST: pgvector-postgres
+  PGVECTOR_PORT: "5432"
+  PGVECTOR_DB: database
+  PGVECTOR_USER: database-user
+  PGVECTOR_PASSWORD: database-password
+
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

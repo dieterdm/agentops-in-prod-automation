@@ -1,0 +1,64 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openshift-ai-waiter
+  namespace: ogx
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ogx-openshift-ai-waiter
+rules:
+- apiGroups: ["datasciencecluster.opendatahub.io"]
+  resources: ["datascienceclusters"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ogx-openshift-ai-waiter
+subjects:
+- kind: ServiceAccount
+  name: openshift-ai-waiter
+  namespace: ogx
+roleRef:
+  kind: ClusterRole
+  name: ogx-openshift-ai-waiter
+  apiGroup: rbac.authorization.k8s.io
+---
+# Blocks the sync until the openshift-ai DataScienceCluster is Ready, so the
+# OGXServer (sync wave 2) is only created after PostgreSQL (wave 0) is healthy
+# and RHOAI has finished rolling out. This is a regular Job (not a hook)
+# without a TTL: Argo CD creates it on the initial sync and leaves the
+# completed Job in place on later syncs. Delete the Job to run it again.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-openshift-ai
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  template:
+    spec:
+      serviceAccountName: openshift-ai-waiter
+      restartPolicy: OnFailure
+      containers:
+      - name: wait
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+
+          echo "Waiting for DataScienceCluster default-dsc"
+          until oc get datasciencecluster default-dsc >/dev/null 2>&1; do
+            sleep 10
+          done
+
+          echo "Waiting for DataScienceCluster default-dsc to be Ready"
+          until oc wait datasciencecluster/default-dsc --for=condition=Ready --timeout=10m; do
+            sleep 10
+          done

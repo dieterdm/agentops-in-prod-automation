@@ -1,0 +1,106 @@
+apiVersion: ogx.io/v1beta1
+kind: OGXServer
+metadata:
+  name: ogx-custom-server
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  distribution:
+    name: rh-dev
+  workload:
+    replicas: 1
+    overrides:
+      env:
+        - name: VLLM_URL
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: VLLM_URL
+        - name: INFERENCE_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: INFERENCE_MODEL
+        - name: VLLM_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: VLLM_API_TOKEN
+        - name: VLLM_TLS_VERIFY
+          value: 'false'
+        - name: EMBEDDING_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: EMBEDDING_MODEL
+        - name: EMBEDDING_PROVIDER_MODEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: EMBEDDING_PROVIDER_MODEL_ID
+        - name: VLLM_EMBEDDING_URL
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: VLLM_EMBEDDING_URL
+        - name: VLLM_EMBEDDING_TLS_VERIFY
+          value: 'false'
+        - name: VLLM_EMBEDDING_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ogx-secret
+              key: VLLM_EMBEDDING_API_TOKEN
+        - name: POSTGRES_HOST
+          value: pgvector-postgres
+        - name: POSTGRES_PORT
+          value: '5432'
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_DB
+              name: pgvector-postgresql-credentials-secret
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: pgvector-postgresql-credentials-secret
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: pgvector-postgresql-credentials-secret
+        - name: ENABLE_PGVECTOR
+          value: "true"
+        - name: PGVECTOR_HOST
+          valueFrom:
+            secretKeyRef:
+              name: pgvector-connection
+              key: PGVECTOR_HOST
+        - name: PGVECTOR_PORT
+          valueFrom:
+            secretKeyRef:
+              name: pgvector-connection
+              key: PGVECTOR_PORT
+        - name: PGVECTOR_DB
+          valueFrom:
+            secretKeyRef:
+              name: pgvector-connection
+              key: PGVECTOR_DB
+        - name: PGVECTOR_USER
+          valueFrom:
+            secretKeyRef:
+              name: pgvector-connection
+              key: PGVECTOR_USER
+        - name: PGVECTOR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pgvector-connection
+              key: PGVECTOR_PASSWORD
+      name: ogx
+      port: 8321
+    distribution:
+      name: 'rh-dev'
+    storage:
+      size: 20Gi

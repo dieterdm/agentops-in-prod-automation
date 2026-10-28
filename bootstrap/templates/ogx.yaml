@@ -23,3 +23,11 @@ spec:
     managedNamespaceMetadata:
       labels:
         argocd.argoproj.io/managed-by: openshift-gitops
+    # The OGXServer CRD is registered by the RHOAI operator, so keep retrying
+    # until the openshift-ai DataScienceCluster has rolled it out.
+    retry:
+      limit: 30
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
