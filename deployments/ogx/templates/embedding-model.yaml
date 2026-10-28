@@ -1,0 +1,109 @@
+# multilingual-e5-large embedding model, served by vLLM on CPU. Mirrors what the
+# dashboard creates when deploying with the vllm-cpu-x86-shm-runtime-template.
+# Sync wave 2 runs after wait-for-openshift-ai, so the KServe CRDs exist, and
+# before the OGXServer (wave 3), which uses this model for embeddings.
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: redhataimultilingual-e5-large
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/apiProtocol: REST
+    opendatahub.io/runtime-version: v0.24.0
+    opendatahub.io/template-display-name: vLLM CPU (x86) ServingRuntime for KServe (with /dev/shm)
+    opendatahub.io/template-name: vllm-cpu-x86-shm-runtime-template
+    openshift.io/display-name: RedHatAI/multilingual-e5-large
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  {{- include "ogx.vllmCpuRuntimeSpec" . | nindent 2 }}
+
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: redhataimultilingual-e5-large
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/hardware-profile-name: default-profile
+    opendatahub.io/hardware-profile-namespace: redhat-ods-applications
+    opendatahub.io/model-type: generative
+    openshift.io/display-name: RedHatAI/multilingual-e5-large
+    security.opendatahub.io/enable-auth: "true"
+    serving.kserve.io/deploymentMode: Standard
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    automountServiceAccountToken: false
+    deploymentStrategy:
+      type: RollingUpdate
+    maxReplicas: 1
+    minReplicas: 1
+    model:
+      modelFormat:
+        name: vLLM
+      protocolVersion: v2
+      runtime: redhataimultilingual-e5-large
+      resources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+        requests:
+          cpu: "2"
+          memory: 4Gi
+      storageUri: oci://registry.redhat.io/rhai/modelcar-intfloat-multilingual-e5-large:3.0
+    timeout: 30
+
+---
+# Identity the OGXServer uses to call the embedding model. With
+# security.opendatahub.io/enable-auth, the model's kube-rbac-proxy only lets
+# through tokens that may get the InferenceService.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ogx-embedding-client
+  namespace: ogx
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ogx-embedding-client
+  namespace: ogx
+rules:
+- apiGroups: ["serving.kserve.io"]
+  resources: ["inferenceservices"]
+  resourceNames: ["redhataimultilingual-e5-large"]
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ogx-embedding-client
+  namespace: ogx
+subjects:
+- kind: ServiceAccount
+  name: ogx-embedding-client
+  namespace: ogx
+roleRef:
+  kind: Role
+  name: ogx-embedding-client
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Long-lived token for ogx-embedding-client, filled in by Kubernetes. Generated
+# in the cluster, so it never has to go through values.secret.yaml.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ogx-embedding-client-token
+  namespace: ogx
+  annotations:
+    kubernetes.io/service-account.name: ogx-embedding-client
+type: kubernetes.io/service-account-token

@@ -4,7 +4,7 @@ metadata:
   name: ogx-custom-server
   namespace: ogx
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   distribution:
@@ -50,8 +50,8 @@ spec:
         - name: VLLM_EMBEDDING_API_TOKEN
           valueFrom:
             secretKeyRef:
-              name: ogx-secret
-              key: VLLM_EMBEDDING_API_TOKEN
+              name: ogx-embedding-client-token
+              key: token
         - name: POSTGRES_HOST
           value: pgvector-postgres
         - name: POSTGRES_PORT
