@@ -1,0 +1,54 @@
+# Copy of the RHOAI-managed csr-kserve-vllm-cpu-x86 runtime with a larger
+# /dev/shm. vLLM needs ~160 MiB of shared memory to start its engine, but
+# containers only get 64 MiB by default.
+apiVersion: serving.kserve.io/v1alpha1
+kind: ClusterServingRuntime
+metadata:
+  name: csr-kserve-vllm-cpu-x86-shm
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/runtime-version: v0.21.0
+    opendatahub.io/template-display-name: vLLM
+    opendatahub.io/version: 1.0.0
+    openshift.io/display-name: vLLM CPU (x86) ServingRuntime for KServe (with /dev/shm)
+  labels:
+    app: odh-dashboard
+    app.kubernetes.io/part-of: odh-dashboard
+    opendatahub.io/dashboard: "true"
+spec:
+  annotations:
+    opendatahub.io/kserve-runtime: vllm
+    prometheus.io/path: /metrics
+    prometheus.io/port: "8080"
+  containers:
+  - args:
+    - --port=8080
+    - --model=/mnt/models
+    # Escaped so Helm leaves the KServe template variable alone.
+    - --served-model-name={{ "{{.Name}}" }}
+    command:
+    - python
+    - -m
+    - vllm.entrypoints.openai.api_server
+    env:
+    - name: HF_HOME
+      value: /tmp/hf_home
+    image: registry.redhat.io/rhaii-fast/vllm-cpu-rhel9@sha256:c5af8896570f0ed54825cdf933642461ef625a760fb3fd1c8be2ec159225ea56
+    name: kserve-container
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+    volumeMounts:
+    - name: shm
+      mountPath: /dev/shm
+  volumes:
+  # Memory-backed, so it counts against the container's memory limit.
+  - name: shm
+    emptyDir:
+      medium: Memory
+      sizeLimit: 1Gi
+  multiModel: false
+  supportedModelFormats:
+  - autoSelect: false
+    name: vLLM
