@@ -60,6 +60,10 @@ spec:
             secretKeyRef:
               name: pgvector-postgresql-credentials-secret
               key: POSTGRES_PASSWORD
+        # Keep the data in a subdirectory so initdb doesn't fail on the
+        # volume's lost+found directory.
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
         - name: pgdata
           mountPath: /var/lib/postgresql/data
