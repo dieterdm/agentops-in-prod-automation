@@ -1,0 +1,8 @@
+apiVersion: v2
+name: ogx
+description: >
+  A helm chart to deploy a pgvector-enabled PostgreSQL database in the ogx
+  namespace
+type: application
+version: 0.1.0
+appVersion: 0.1.0
