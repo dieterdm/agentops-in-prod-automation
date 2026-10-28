@@ -53,8 +53,13 @@ spec:
       # vLLM reserves for weights and KV cache. The default 0.92 doesn't fit
       # next to vLLM's other processes (~2.6 GiB), so reserve 2.4 GiB of 6 GiB.
       # That still fits the weights (~1.1 GiB) and the KV cache for 512 tokens.
+      # OGX always sends `dimensions` when embedding vector store files, which
+      # vLLM rejects for non-Matryoshka models. Declaring the native size as
+      # the only Matryoshka dimension accepts dimensions=1024 without changing
+      # the output, and still rejects any truncation.
       args:
       - --gpu-memory-utilization=0.4
+      - '--hf-overrides={"matryoshka_dimensions": [1024]}'
       resources:
         limits:
           cpu: "2"

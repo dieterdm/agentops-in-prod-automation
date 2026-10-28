@@ -40,6 +40,10 @@ spec:
             secretKeyRef:
               name: ogx-secret
               key: EMBEDDING_PROVIDER_MODEL_ID
+        # Output size of multilingual-e5-large. The distribution defaults to
+        # 768, which only fits granite-embedding-125m.
+        - name: EMBEDDING_DIMENSION
+          value: '1024'
         - name: VLLM_EMBEDDING_URL
           valueFrom:
             secretKeyRef:
