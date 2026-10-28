@@ -98,9 +98,5 @@ spec:
             secretKeyRef:
               name: pgvector-connection
               key: PGVECTOR_PASSWORD
-      name: ogx
-      port: 8321
-    distribution:
-      name: 'rh-dev'
     storage:
       size: 20Gi
