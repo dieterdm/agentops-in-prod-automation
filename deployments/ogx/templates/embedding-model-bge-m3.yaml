@@ -1,0 +1,85 @@
+# BAAI/bge-m3 embedding model, served by vLLM on CPU. Same base model as
+# multilingual-e5-large (XLM-RoBERTa-large), but accepts much longer inputs, so
+# vector store chunks can be bigger than e5's 512-token limit allows.
+# Sync wave 2 runs after wait-for-openshift-ai, so the KServe CRDs exist, and
+# before the OGXServer (wave 3).
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: baai-bge-m3
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/apiProtocol: REST
+    opendatahub.io/runtime-version: v0.24.0
+    opendatahub.io/template-display-name: vLLM CPU (x86) ServingRuntime for KServe (with /dev/shm)
+    opendatahub.io/template-name: vllm-cpu-x86-shm-runtime-template
+    openshift.io/display-name: BAAI/bge-m3
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  {{- include "ogx.vllmCpuRuntimeSpec" . | nindent 2 }}
+
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: baai-bge-m3
+  namespace: ogx
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    opendatahub.io/hardware-profile-name: default-profile
+    opendatahub.io/hardware-profile-namespace: redhat-ods-applications
+    opendatahub.io/model-type: generative
+    openshift.io/display-name: BAAI/bge-m3
+    security.opendatahub.io/enable-auth: "true"
+    serving.kserve.io/deploymentMode: Standard
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    automountServiceAccountToken: false
+    # No node has room for a second 7Gi pod during a rolling update, so stop
+    # the old pod before starting the new one.
+    deploymentStrategy:
+      type: Recreate
+    maxReplicas: 1
+    minReplicas: 1
+    model:
+      modelFormat:
+        name: vLLM
+      protocolVersion: v2
+      runtime: baai-bge-m3
+      # Run in float32: these Cascade Lake CPUs can only emulate float16
+      # (~270x slower).
+      # bge-m3 accepts up to 8192 tokens, but the memory vLLM needs grows with
+      # the maximum input length. 2048 tokens still allows chunks four times
+      # e5's size within the 3.5 GiB reserved out of 7 GiB (float32 weights are
+      # ~2.1 GiB, the rest of the container goes to vLLM's other processes).
+      # OGX always sends `dimensions` when embedding vector store files, which
+      # vLLM rejects for non-Matryoshka models. Declaring bge-m3's native
+      # 1024-dimensional output as the only Matryoshka dimension accepts it
+      # without changing the output, and still rejects any truncation.
+      args:
+      - --dtype=float32
+      - --max-model-len=2048
+      - --gpu-memory-utilization=0.5
+      - '--hf-overrides={"matryoshka_dimensions": [1024]}'
+      env:
+      # vLLM starts one thread per node core by default, which the CPU limit
+      # then throttles. Bind one thread per CPU in the limit instead.
+      - name: VLLM_CPU_OMP_THREADS_BIND
+        value: "0-3"
+      resources:
+        limits:
+          cpu: "4"
+          memory: 7Gi
+        requests:
+          cpu: "4"
+          memory: 7Gi
+      storageUri: oci://registry.redhat.io/rhai/modelcar-baai-bge-m3:3.0
+    # Also the upstream timeout of the auth proxy in front of vLLM. OGX sends
+    # all chunks of a file in one request, which takes minutes on CPU.
+    timeout: 300
