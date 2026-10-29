@@ -41,8 +41,8 @@ metadata:
 spec:
   predictor:
     automountServiceAccountToken: false
-    # No node has room for a second 7Gi pod during a rolling update, so stop
-    # the old pod before starting the new one.
+    # Stop the old pod before starting the new one, so a rollout never needs
+    # room for two 9Gi pods.
     deploymentStrategy:
       type: Recreate
     maxReplicas: 1
@@ -56,8 +56,11 @@ spec:
       # (~270x slower).
       # bge-m3 accepts up to 8192 tokens, but the memory vLLM needs grows with
       # the maximum input length. 2048 tokens still allows chunks four times
-      # e5's size within the 3.5 GiB reserved out of 7 GiB (float32 weights are
-      # ~2.1 GiB, the rest of the container goes to vLLM's other processes).
+      # e5's size. --gpu-memory-utilization is the share of the container
+      # memory vLLM reserves for weights and KV cache: 3.15 GiB of 9 GiB fits
+      # the float32 weights (~2.1 GiB) plus cache. The rest is needed by the
+      # worker's own overhead (~1.6 GiB), the API server (~1.8 GiB), the engine
+      # core (~0.8 GiB) and compilation during warm-up, measured at 7 GiB OOM.
       # OGX always sends `dimensions` when embedding vector store files, which
       # vLLM rejects for non-Matryoshka models. Declaring bge-m3's native
       # 1024-dimensional output as the only Matryoshka dimension accepts it
@@ -65,7 +68,7 @@ spec:
       args:
       - --dtype=float32
       - --max-model-len=2048
-      - --gpu-memory-utilization=0.5
+      - --gpu-memory-utilization=0.35
       - '--hf-overrides={"matryoshka_dimensions": [1024]}'
       env:
       # vLLM starts one thread per node core by default, which the CPU limit
@@ -75,10 +78,10 @@ spec:
       resources:
         limits:
           cpu: "4"
-          memory: 7Gi
+          memory: 9Gi
         requests:
           cpu: "4"
-          memory: 7Gi
+          memory: 9Gi
       storageUri: oci://registry.redhat.io/rhai/modelcar-baai-bge-m3:3.0
     # Also the upstream timeout of the auth proxy in front of vLLM. OGX sends
     # all chunks of a file in one request, which takes minutes on CPU.
