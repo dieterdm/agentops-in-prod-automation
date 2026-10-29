@@ -40,8 +40,10 @@ metadata:
 spec:
   predictor:
     automountServiceAccountToken: false
+    # No node has room for a second 7Gi pod during a rolling update, so stop
+    # the old pod before starting the new one.
     deploymentStrategy:
-      type: RollingUpdate
+      type: Recreate
     maxReplicas: 1
     minReplicas: 1
     model:
@@ -49,26 +51,36 @@ spec:
         name: vLLM
       protocolVersion: v2
       runtime: redhataimultilingual-e5-large
+      # The model defaults to float16, which these Cascade Lake CPUs can only
+      # emulate (~270x slower than float32), so run it in float32.
       # On CPU, --gpu-memory-utilization is the share of the container memory
       # vLLM reserves for weights and KV cache. The default 0.92 doesn't fit
-      # next to vLLM's other processes (~2.6 GiB), so reserve 2.4 GiB of 6 GiB.
-      # That still fits the weights (~1.1 GiB) and the KV cache for 512 tokens.
+      # next to vLLM's other processes (~2.6 GiB), so reserve 3.5 GiB of 7 GiB.
+      # That fits the float32 weights (~2.1 GiB) and the KV cache for 512 tokens.
       # OGX always sends `dimensions` when embedding vector store files, which
       # vLLM rejects for non-Matryoshka models. Declaring the native size as
       # the only Matryoshka dimension accepts dimensions=1024 without changing
       # the output, and still rejects any truncation.
       args:
-      - --gpu-memory-utilization=0.4
+      - --dtype=float32
+      - --gpu-memory-utilization=0.5
       - '--hf-overrides={"matryoshka_dimensions": [1024]}'
+      env:
+      # vLLM starts one thread per node core by default, which the CPU limit
+      # then throttles. Bind one thread per CPU in the limit instead.
+      - name: VLLM_CPU_OMP_THREADS_BIND
+        value: "0-3"
       resources:
         limits:
-          cpu: "2"
-          memory: 6Gi
+          cpu: "4"
+          memory: 7Gi
         requests:
-          cpu: "2"
-          memory: 6Gi
+          cpu: "4"
+          memory: 7Gi
       storageUri: oci://registry.redhat.io/rhai/modelcar-intfloat-multilingual-e5-large:3.0
-    timeout: 30
+    # Also the upstream timeout of the auth proxy in front of vLLM. OGX sends
+    # all chunks of a file in one request, which takes minutes on CPU.
+    timeout: 300
 
 ---
 # Identity the OGXServer uses to call the embedding model. With
