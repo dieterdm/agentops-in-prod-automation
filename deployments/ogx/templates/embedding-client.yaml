@@ -1,6 +1,6 @@
-# Identity the OGXServer uses to call the embedding models. With
-# security.opendatahub.io/enable-auth, each model's kube-rbac-proxy only lets
-# through tokens that may get its InferenceService.
+# Identity the OGXServer uses to call the embedding model. With
+# security.opendatahub.io/enable-auth, the model's kube-rbac-proxy only lets
+# through tokens that may get the InferenceService.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -16,9 +16,7 @@ metadata:
 rules:
 - apiGroups: ["serving.kserve.io"]
   resources: ["inferenceservices"]
-  resourceNames:
-  - redhataimultilingual-e5-large
-  - baai-bge-m3
+  resourceNames: ["redhataimultilingual-e5-large"]
   verbs: ["get"]
 
 ---
