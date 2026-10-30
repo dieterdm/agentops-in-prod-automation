@@ -24,6 +24,7 @@ spec:
     disableLMEval: false
     mcpCatalog: true
     guardrails: true
+    autorag: true
   hardwareProfileOrder: []
   notebookController:
     enabled: true
