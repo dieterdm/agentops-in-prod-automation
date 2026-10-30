@@ -25,6 +25,7 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── logging.yaml               # Cluster logging
     ├── users.yaml                 # Cluster administrators
     ├── mcp-server.yaml            # OpenShift MCP server
+    ├── ogx.yaml                   # OGX server for RAG (optional)
     └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
@@ -32,6 +33,7 @@ deployments/                       # Individual Helm charts
 ├── kuadrant/                      # Kuadrant operator and gateway policies
 ├── logging/                       # Cluster logging stack
 ├── mcp-server/                    # OpenShift MCP server and catalog entry
+├── ogx/                           # OGX server, pgvector and e5 embedding model
 ├── mlflow/                        # MLflow tracking server
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription
@@ -153,6 +155,12 @@ oc get storageclass
 If your cluster does not have GPU access, you can configure MaaS to use an external model provider instead. Set `maas_external_provider.enabled: true` in `bootstrap/values.yaml` and provide the API key and endpoint in `bootstrap/values.secret.yaml`.
 
 You can create an external model on the Red Hat MaaS platform at https://maas-rhdp-frontend.apps.maas.redhatworkshops.io/
+
+### OGX RAG server (optional)
+
+The `ogx` chart deploys an OGX server with a pgvector database and the `multilingual-e5-large` embedding model in the `ogx` namespace. It is enabled by default. To skip it, set `ogx.enabled: false` in `bootstrap/values.yaml`; the `rag` section in `bootstrap/values.secret.yaml` is then not needed.
+
+When enabled, set the LLM and embedding endpoints in the `rag` section of `bootstrap/values.secret.yaml` (see `bootstrap/values.secret.yaml.example`).
 
 ## Deployment
 

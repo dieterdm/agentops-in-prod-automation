@@ -20,6 +20,11 @@ users:
 maas_external_provider:
   enabled: true
 
+ogx:
+  # Deploy the OGX server with pgvector and the e5 embedding model. Needs the
+  # rag settings in values.secret.yaml.
+  enabled: true
+
 openshiftai:
   # Subscription channel for the RHOAI operator
   channel: beta
