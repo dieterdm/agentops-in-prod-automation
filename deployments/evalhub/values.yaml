@@ -1,0 +1,21 @@
+# PostgreSQL database that stores EvalHub's evaluation jobs and results
+postgresql:
+  image: registry.redhat.io/rhel9/postgresql-16:latest
+  storage: 1Gi
+  database: evalhub
+  user: evalhub
+  # Demo credentials, replace for anything beyond a demo environment
+  password: evalhub-password
+
+evalhub:
+  replicas: 1
+  # Evaluation providers and benchmark collections loaded at startup
+  providers:
+    - lm-evaluation-harness
+    - garak
+    - guidellm
+  collections:
+    - safety-and-fairness-v1
+  # MLflow tracking server for evaluation results. Leave empty to disable the
+  # MLflow integration.
+  mlflowTrackingUri: http://mlflow.mlflow.svc.cluster.local:5000

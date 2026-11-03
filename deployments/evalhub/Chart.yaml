@@ -1,0 +1,8 @@
+apiVersion: v2
+name: evalhub
+description: >
+  A helm chart to deploy TrustyAI EvalHub with a PostgreSQL database in the
+  evalhub namespace
+type: application
+version: 0.1.0
+appVersion: 0.1.0

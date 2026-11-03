@@ -25,6 +25,11 @@ ogx:
   # rag settings in values.secret.yaml.
   enabled: true
 
+evalhub:
+  # Deploy TrustyAI EvalHub with a PostgreSQL database for evaluating models.
+  # Needs the trustyai component of the DataScienceCluster.
+  enabled: true
+
 openshiftai:
   # Subscription channel for the RHOAI operator
   channel: beta

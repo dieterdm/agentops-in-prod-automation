@@ -1,0 +1,25 @@
+{{- if .Values.evalhub.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: evalhub
+  labels:
+    # Lets evaluation jobs run in this namespace: the TrustyAI operator then
+    # provisions the job ServiceAccount and RBAC here. The value is
+    # intentionally empty, only the label's presence counts.
+    evalhub.trustyai.opendatahub.io/tenant: ""
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-admin
+  namespace: evalhub
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

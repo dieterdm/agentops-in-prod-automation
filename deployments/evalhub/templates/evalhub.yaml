@@ -1,0 +1,24 @@
+# Reconciled by the TrustyAI operator. Sync wave 1 waits until PostgreSQL
+# (wave 0) is healthy.
+apiVersion: trustyai.opendatahub.io/v1
+kind: EvalHub
+metadata:
+  name: evalhub
+  namespace: evalhub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  replicas: {{ .Values.evalhub.replicas }}
+  database:
+    type: postgresql
+    secret: evalhub-db-credentials
+  providers:
+    {{- toYaml .Values.evalhub.providers | nindent 4 }}
+  collections:
+    {{- toYaml .Values.evalhub.collections | nindent 4 }}
+  {{- with .Values.evalhub.mlflowTrackingUri }}
+  env:
+  - name: MLFLOW_TRACKING_URI
+    value: {{ . | quote }}
+  {{- end }}

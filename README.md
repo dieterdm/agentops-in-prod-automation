@@ -26,10 +26,12 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── users.yaml                 # Cluster administrators
     ├── mcp-server.yaml            # OpenShift MCP server
     ├── ogx.yaml                   # OGX server for RAG (optional)
+    ├── evalhub.yaml               # TrustyAI EvalHub for model evaluation (optional)
     └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
 ├── cluster-monitoring/            # OpenShift monitoring config
+├── evalhub/                       # TrustyAI EvalHub and its PostgreSQL database
 ├── kuadrant/                      # Kuadrant operator and gateway policies
 ├── logging/                       # Cluster logging stack
 ├── mcp-server/                    # OpenShift MCP server and catalog entry
@@ -161,6 +163,12 @@ You can create an external model on the Red Hat MaaS platform at https://maas-rh
 The `ogx` chart deploys an OGX server with a pgvector database and the `multilingual-e5-large` embedding model in the `ogx` namespace. It is enabled by default. To skip it, set `ogx.enabled: false` in `bootstrap/values.yaml`; the `rag` section in `bootstrap/values.secret.yaml` is then not needed.
 
 When enabled, set the LLM and embedding endpoints in the `rag` section of `bootstrap/values.secret.yaml` (see `bootstrap/values.secret.yaml.example`).
+
+### EvalHub (optional)
+
+The `evalhub` chart deploys TrustyAI EvalHub with a PostgreSQL database in the `evalhub` namespace, for running evaluations such as `lm-evaluation-harness`, `garak` and `guidellm` against models. It is enabled by default. To skip it, set `evalhub.enabled: false` in `bootstrap/values.yaml`.
+
+The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. The `evalhub` namespace is labelled as an EvalHub tenant, so evaluation jobs can run there.
 
 ## Deployment
 
