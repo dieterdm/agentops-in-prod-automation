@@ -1,0 +1,11 @@
+{{- if .Values.evalhub.mlflowTrackingUri }}
+# OpenShift injects its service CA into this ConfigMap, so EvalHub can verify
+# the certificate of OpenShift AI's MLflow.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-ca
+  namespace: evalhub
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+{{- end }}

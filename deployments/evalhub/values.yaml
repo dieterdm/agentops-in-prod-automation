@@ -16,6 +16,7 @@ evalhub:
     - guidellm
   collections:
     - safety-and-fairness-v1
-  # MLflow tracking server for evaluation results. Leave empty to disable the
+  # MLflow tracking server for evaluation results: the one deployed by
+  # OpenShift AI, served over HTTPS under /mlflow. Leave empty to disable the
   # MLflow integration.
-  mlflowTrackingUri: http://mlflow.mlflow.svc.cluster.local:5000
+  mlflowTrackingUri: https://mlflow.redhat-ods-applications.svc.cluster.local:8443/mlflow

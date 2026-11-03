@@ -18,6 +18,12 @@ spec:
   collections:
     {{- toYaml .Values.evalhub.collections | nindent 4 }}
   {{- with .Values.evalhub.mlflowTrackingUri }}
+  # MLflow's certificate is signed by the OpenShift service CA
+  mlflow:
+    tls:
+      caBundle:
+        name: service-ca
+        key: service-ca.crt
   env:
   - name: MLFLOW_TRACKING_URI
     value: {{ . | quote }}
