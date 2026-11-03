@@ -9,6 +9,11 @@ postgresql:
 
 evalhub:
   replicas: 1
+  # single: EvalHub serves only its own namespace, so evaluations run in
+  # evalhub. multi: it serves other namespaces labelled with
+  # evalhub.trustyai.opendatahub.io/tenant, but then the evalhub namespace
+  # itself must not carry that label.
+  tenancy: single
   # Evaluation providers and benchmark collections loaded at startup
   providers:
     - lm-evaluation-harness

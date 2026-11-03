@@ -168,7 +168,7 @@ When enabled, set the LLM and embedding endpoints in the `rag` section of `boots
 
 The `evalhub` chart deploys TrustyAI EvalHub with a PostgreSQL database in the `evalhub` namespace, for running evaluations such as `lm-evaluation-harness`, `garak` and `guidellm` against models. It is enabled by default. To skip it, set `evalhub.enabled: false` in `bootstrap/values.yaml`.
 
-The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. The `evalhub` namespace is labelled as an EvalHub tenant, so evaluation jobs can run there.
+The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. EvalHub runs single-tenant: it serves only the `evalhub` namespace, where evaluation jobs run.
 
 ## Deployment
 

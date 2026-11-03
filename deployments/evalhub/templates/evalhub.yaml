@@ -10,6 +10,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   replicas: {{ .Values.evalhub.replicas }}
+  tenancy: {{ .Values.evalhub.tenancy }}
   database:
     type: postgresql
     secret: evalhub-db-credentials
