@@ -18,6 +18,8 @@ spec:
     disableModelRegistry: false
     disableModelCatalog: false
     disableKServeMetrics: false
+    # Show the Evaluations page only when EvalHub is deployed (evalhub app)
+    disableEvalHub: {{ not .Values.evalhub.enabled }}
     genAiStudio: true
     modelAsService: true
     externalModels: true
