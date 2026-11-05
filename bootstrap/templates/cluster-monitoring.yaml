@@ -19,3 +19,11 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # The UIPlugin CRD only exists once the Cluster Observability Operator
+    # this app installs is up, so keep retrying until then.
+    retry:
+      limit: 30
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
