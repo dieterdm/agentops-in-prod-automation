@@ -65,11 +65,6 @@ admins: []
 clusterDomain: needupdate
 cert: needupdate
 
-# Set by the bootstrap chart when the evalhub app is deployed; enables the
-# Evaluations page in the dashboard.
-evalhub:
-  enabled: false
-
 maas_external_provider:
   enabled: false
   api_key: needupdate

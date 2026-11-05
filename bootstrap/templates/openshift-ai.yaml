@@ -19,8 +19,6 @@ spec:
       valuesObject:
         clusterDomain: "{{ .Values.openshiftai.clusterDomain }}"
         cert: "{{ .Values.openshiftai.cert }}"
-        evalhub:
-          enabled: {{ .Values.evalhub.enabled }}
         maas_external_provider:
           enabled: {{ .Values.maas_external_provider.enabled }}
           {{- if .Values.maas_external_provider.enabled }}
