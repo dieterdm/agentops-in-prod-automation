@@ -157,6 +157,22 @@ The `evalhub` chart deploys TrustyAI EvalHub with a PostgreSQL database in the `
 
 The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. EvalHub runs single-tenant: it serves only the `evalhub` namespace, where evaluation jobs run.
 
+### S4 storage
+
+The `s4` chart is always deployed. It runs [S4](https://github.com/rh-aiservices-bu/s4) in the `s4` namespace with a 50Gi volume and creates the buckets listed in `bootstrap/values.yaml` (`logging.bucket`, and `auto.bucket` when `auto.enabled` is true). The S3 API is only reachable inside the cluster, at `http://s4.s4.svc.cluster.local:7480`.
+
+S4 also has a web console for browsing buckets and uploading or downloading files. To open it, get the URL of its route:
+
+```bash
+echo https://$(oc get route s4 -n s4 -o jsonpath='{.spec.host}')
+```
+
+Log in with the `ui_username` and `ui_password` from the `s4` section of `bootstrap/values.secret.yaml`. The same section holds the S3 access key (`access_key_id`) and secret key (`access_key_secret`) for S3 clients. All four values are also stored in the `s4-credentials` secret in the `s4` namespace:
+
+```bash
+oc extract secret/s4-credentials -n s4 --to=-
+```
+
 ### AutoML and AutoRAG (optional)
 
 AutoML and AutoRAG are OpenShift AI dashboard features that run automated experiments as pipelines:
