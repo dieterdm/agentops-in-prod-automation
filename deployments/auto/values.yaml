@@ -1,14 +1,14 @@
 # Pipeline server for the AutoML and AutoRAG pipelines in the auto namespace
 dspa:
   name: dspa
-  # S4 bucket for pipeline artifacts. The credentials are in the
-  # dspa-s3-credentials secret, created by the bootstrap chart.
+  # S4 bucket for pipeline artifacts. The credentials are in the connection
+  # secret named after the bucket, created by the bootstrap chart.
   objectStorage:
     # Full URL, for example http://s4.s4.svc.cluster.local:7480
     endpoint: needupdate
     bucket: needupdate
     region: us-east-1
-    credentialsSecret: dspa-s3-credentials
+    credentialsSecret: needupdate
 
 # Image with the AWS CLI, used to wait for the S3 bucket
 awsCliImage: public.ecr.aws/aws-cli/aws-cli:latest

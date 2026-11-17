@@ -22,6 +22,8 @@ spec:
             endpoint: "{{ .Values.s4.endpoint }}"
             bucket: "{{ .Values.auto.bucket }}"
             region: "{{ .Values.s4.region }}"
+            # Connection secret created by the bootstrap chart
+            credentialsSecret: "{{ .Values.auto.bucket }}"
   syncPolicy:
     automated:
       prune: true

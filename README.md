@@ -180,7 +180,7 @@ AutoML and AutoRAG are OpenShift AI dashboard features that run automated experi
 - **AutoML** trains and compares several machine learning models on a tabular dataset and ranks them, so you can pick the best one to deploy.
 - **AutoRAG** tries out different retrieval-augmented generation (RAG) configurations (for example chunking, embedding and retrieval settings) on your documents and ranks them on answer quality.
 
-The `auto` chart turns both features on in the dashboard and creates an `auto` data science project to run them in. The project has a pipeline server (`DataSciencePipelinesApplication`) that stores its artifacts in the `auto-pipelines` bucket in S4. It is enabled by default. To skip it, set `auto.enabled: false` in `bootstrap/values.yaml`; AutoML and AutoRAG are then hidden in the dashboard.
+The `auto` chart turns both features on in the dashboard and creates an `auto` data science project to run them in. The project has a pipeline server (`DataSciencePipelinesApplication`) that stores its artifacts in the `auto-pipelines` bucket in S4. The project also gets an `auto-pipelines` S3 connection to that bucket, which you can select in AutoML and AutoRAG to upload your data. It is enabled by default. To skip it, set `auto.enabled: false` in `bootstrap/values.yaml`; AutoML and AutoRAG are then hidden in the dashboard.
 
 To try them out, open the `auto` project in the OpenShift AI dashboard. Sample data and example notebooks are available in the [red-hat-ai-examples](https://github.com/red-hat-data-services/red-hat-ai-examples/tree/main/examples) repository.
 
