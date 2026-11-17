@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s4
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-admin
+  namespace: s4
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Created by the bootstrap chart rather than the s4 Argo CD app, so the
+# credentials from values.secret.yaml never end up in git or in an Application.
+# S4 creates its S3 admin user from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: s4-credentials
+  namespace: s4
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: {{ required "s4.access_key_id is required in values.secret.yaml" .Values.s4.access_key_id | quote }}
+  AWS_SECRET_ACCESS_KEY: {{ required "s4.access_key_secret is required in values.secret.yaml" .Values.s4.access_key_secret | quote }}
+  UI_USERNAME: {{ required "s4.ui_username is required in values.secret.yaml" .Values.s4.ui_username | quote }}
+  UI_PASSWORD: {{ required "s4.ui_password is required in values.secret.yaml" .Values.s4.ui_password | quote }}

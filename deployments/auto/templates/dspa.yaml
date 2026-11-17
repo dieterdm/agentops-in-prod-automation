@@ -1,0 +1,33 @@
+{{- $endpoint := urlParse .Values.dspa.objectStorage.endpoint }}
+{{- $hostPort := splitList ":" $endpoint.host }}
+apiVersion: datasciencepipelinesapplications.opendatahub.io/v1
+kind: DataSciencePipelinesApplication
+metadata:
+  name: {{ .Values.dspa.name }}
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    # After wait-for-s3-bucket (wave 0)
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  dspVersion: v2
+  podToPodTLS: true
+  apiServer:
+    deploy: true
+    enableSamplePipeline: false
+    managedPipelines: {}
+  database:
+    mariaDB:
+      deploy: true
+  objectStorage:
+    externalStorage:
+      host: {{ first $hostPort | quote }}
+      {{- if gt (len $hostPort) 1 }}
+      port: {{ last $hostPort | quote }}
+      {{- end }}
+      scheme: {{ $endpoint.scheme | default "https" | quote }}
+      bucket: {{ .Values.dspa.objectStorage.bucket | quote }}
+      region: {{ .Values.dspa.objectStorage.region | quote }}
+      s3CredentialsSecret:
+        secretName: {{ .Values.dspa.objectStorage.credentialsSecret }}
+        accessKey: AWS_ACCESS_KEY_ID
+        secretKey: AWS_SECRET_ACCESS_KEY

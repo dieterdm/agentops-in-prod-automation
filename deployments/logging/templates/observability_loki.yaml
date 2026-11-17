@@ -4,10 +4,13 @@ metadata:
   name: loki-s3-secret
   namespace: redhat-ods-monitoring
 stringData:
-  access_key_id: {{ .Values.s3.access_key_id }}
-  access_key_secret: {{ .Values.s3.access_key_secret }}
-  bucketnames: {{ .Values.s3.bucketnames }}
-  endpoint: {{ .Values.s3.endpoint }}
+  access_key_id: {{ .Values.s3.access_key_id | quote }}
+  access_key_secret: {{ .Values.s3.access_key_secret | quote }}
+  bucketnames: {{ .Values.s3.bucketnames | quote }}
+  endpoint: {{ .Values.s3.endpoint | quote }}
+  region: {{ .Values.s3.region | quote }}
+  # S4 serves buckets by path, not by virtual host
+  forcepathstyle: "true"
 type: Opaque
 ---
 apiVersion: loki.grafana.com/v1
@@ -15,6 +18,9 @@ kind: LokiStack
 metadata:
   name: usage
   namespace: redhat-ods-monitoring
+  annotations:
+    # After wait-for-s3-bucket (wave 1)
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   limits:
     global:

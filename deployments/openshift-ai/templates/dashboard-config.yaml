@@ -24,8 +24,8 @@ spec:
     disableLMEval: false
     mcpCatalog: true
     guardrails: true
-    autorag: true
-    automl: true
+    autorag: {{ .Values.auto.enabled }}
+    automl: {{ .Values.auto.enabled }}
   hardwareProfileOrder: []
   notebookController:
     enabled: true

@@ -27,9 +27,12 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── mcp-server.yaml            # OpenShift MCP server
     ├── ogx.yaml                   # OGX server for RAG (optional)
     ├── evalhub.yaml               # TrustyAI EvalHub for model evaluation (optional)
+    ├── auto.yaml                  # AutoML and AutoRAG project and pipeline server (optional)
+    ├── s4.yaml                    # S4 S3-compatible storage for all buckets
     └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
+├── auto/                          # Pipeline server for AutoML and AutoRAG
 ├── cluster-monitoring/            # OpenShift monitoring config
 ├── evalhub/                       # TrustyAI EvalHub and its PostgreSQL database
 ├── kuadrant/                      # Kuadrant operator and gateway policies
@@ -39,6 +42,7 @@ deployments/                       # Individual Helm charts
 ├── mlflow/                        # MLflow tracking server
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription
+├── s4/                            # S4 storage and bucket creation
 └── users/                         # Admin groups and RBAC
 ```
 
@@ -46,33 +50,16 @@ deployments/                       # Individual Helm charts
 
 - Red Hat OpenShift GitOps installed on the cluster
 - Every user listed in `users.clusterAdmins` must already exist on the cluster (defaults to `dieter`). See [Cluster administrators](#cluster-administrators).
-- An S3-compatible bucket for LokiStack logging storage. You can create one using OpenShift Data Foundation:
 
-```yaml
-apiVersion: objectbucket.io/v1alpha1
-kind: ObjectBucketClaim
-metadata:
-  name: rhoai-logging
-  namespace: clusters-rhoai
-  labels:
-    app: noobaa
-    bucket-provisioner: openshift-storage.noobaa.io-obc
-    noobaa-domain: openshift-storage.noobaa.io
-spec:
-  additionalConfig:
-    bucketclass: noobaa-default-bucket-class
-  generateBucketName: rhoai-logging
-  objectBucketName: obc-clusters-rhoai-rhoai-logging
-  storageClassName: openshift-storage.noobaa.io
-```
+S3 storage doesn't need to be provisioned up front: the `s4` chart deploys [S4](https://github.com/rh-aiservices-bu/s4), an S3-compatible storage server, in the `s4` namespace and creates every bucket used in this project (LokiStack logs and the AutoML/AutoRAG pipeline artifacts). Apps that use a bucket wait until S4 is up and their bucket exists.
 
 ## Configuration
 
-Sensitive values (S3 credentials) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
+Sensitive values (S4 credentials, API keys) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
 
 ```bash
 cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
-# Edit bootstrap/values.secret.yaml with your S3 bucket credentials and other secrets
+# Edit bootstrap/values.secret.yaml with your S4 credentials and other secrets
 ```
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
@@ -169,6 +156,17 @@ When enabled, set the LLM and embedding endpoints in the `rag` section of `boots
 The `evalhub` chart deploys TrustyAI EvalHub with a PostgreSQL database in the `evalhub` namespace, for running evaluations such as `lm-evaluation-harness`, `garak` and `guidellm` against models. It is enabled by default. To skip it, set `evalhub.enabled: false` in `bootstrap/values.yaml`.
 
 The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. EvalHub runs single-tenant: it serves only the `evalhub` namespace, where evaluation jobs run.
+
+### AutoML and AutoRAG (optional)
+
+AutoML and AutoRAG are OpenShift AI dashboard features that run automated experiments as pipelines:
+
+- **AutoML** trains and compares several machine learning models on a tabular dataset and ranks them, so you can pick the best one to deploy.
+- **AutoRAG** tries out different retrieval-augmented generation (RAG) configurations (for example chunking, embedding and retrieval settings) on your documents and ranks them on answer quality.
+
+The `auto` chart turns both features on in the dashboard and creates an `auto` data science project to run them in. The project has a pipeline server (`DataSciencePipelinesApplication`) that stores its artifacts in the `auto-pipelines` bucket in S4. It is enabled by default. To skip it, set `auto.enabled: false` in `bootstrap/values.yaml`; AutoML and AutoRAG are then hidden in the dashboard.
+
+To try them out, open the `auto` project in the OpenShift AI dashboard. Sample data and example notebooks are available in the [red-hat-ai-examples](https://github.com/red-hat-data-services/red-hat-ai-examples/tree/main/examples) repository.
 
 ## Deployment
 

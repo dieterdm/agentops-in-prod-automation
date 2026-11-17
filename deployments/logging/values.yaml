@@ -5,3 +5,7 @@ s3:
   access_key_secret: needupdate
   bucketnames: needupdate
   endpoint: needupdate
+  region: us-east-1
+
+# Image with the AWS CLI, used to wait for the S3 bucket
+awsCliImage: public.ecr.aws/aws-cli/aws-cli:latest

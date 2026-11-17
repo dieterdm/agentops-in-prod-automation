@@ -7,9 +7,19 @@ bootstrap:
   # Branch or tag to use
   targetRevision: opencode
 
+s4:
+  # S4 serves every S3 bucket used in this project. The credentials are in
+  # values.secret.yaml.
+  endpoint: http://s4.s4.svc.cluster.local:7480
+  region: us-east-1
+  storageSize: 50Gi
+  storageClassName: kubevirt-csi-infra-default
+
 logging:
   # Storage class used by the LokiStack PVCs
   storageClassName: kubevirt-csi-infra-default
+  # S4 bucket for the LokiStack
+  bucket: loki
 
 users:
   # Users granted cluster-admin, OpenShift AI admin and ArgoCD admin rights.
@@ -29,6 +39,13 @@ evalhub:
   # Deploy TrustyAI EvalHub with a PostgreSQL database for evaluating models.
   # Needs the trustyai component of the DataScienceCluster.
   enabled: true
+
+auto:
+  # Enable AutoML and AutoRAG in the OpenShift AI dashboard and create the auto
+  # data science project to run them in.
+  enabled: true
+  # S4 bucket for the auto pipeline server artifacts
+  bucket: auto-pipelines
 
 openshiftai:
   # Subscription channel for the RHOAI operator

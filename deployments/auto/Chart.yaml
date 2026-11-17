@@ -1,0 +1,8 @@
+apiVersion: v2
+name: auto
+description: >
+  A helm chart to prepare the auto namespace for AutoML and AutoRAG in the
+  OpenShift AI dashboard
+type: application
+version: 0.1.0
+appVersion: 0.1.0

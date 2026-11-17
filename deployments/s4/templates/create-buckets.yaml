@@ -1,0 +1,62 @@
+{{- if .Values.buckets }}
+# Runs after every sync, once the S4 Deployment is healthy, and creates the
+# buckets that don't exist yet. Apps that use a bucket wait for it to exist.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-buckets
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-buckets
+          image: {{ .Values.awsCliImage }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              ENDPOINT=http://s4.{{ .Release.Namespace }}.svc.cluster.local:7480
+              until aws --endpoint-url "$ENDPOINT" s3api list-buckets >/dev/null; do
+                echo "Waiting for the S4 S3 API"
+                sleep 10
+              done
+              for bucket in $BUCKETS; do
+                if aws --endpoint-url "$ENDPOINT" s3api head-bucket --bucket "$bucket" 2>/dev/null; then
+                  echo "Bucket $bucket already exists"
+                else
+                  echo "Creating bucket $bucket"
+                  aws --endpoint-url "$ENDPOINT" s3api create-bucket --bucket "$bucket"
+                fi
+              done
+          env:
+            - name: BUCKETS
+              value: {{ join " " .Values.buckets | quote }}
+            - name: HOME
+              value: /tmp
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: AWS_SECRET_ACCESS_KEY
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+{{- end }}

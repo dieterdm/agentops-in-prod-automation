@@ -1,0 +1,55 @@
+# Blocks the sync until the S3 bucket exists in S4, so the LokiStack (a later
+# sync wave) only starts once S4 is up and the s4 app has created the bucket.
+# A Sync hook, so it is recreated (and waits again) on every sync.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-s3-bucket
+  namespace: redhat-ods-monitoring
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: wait
+          image: {{ .Values.awsCliImage }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              until aws --endpoint-url "$ENDPOINT" s3api head-bucket --bucket "$BUCKET"; do
+                echo "Waiting for bucket $BUCKET at $ENDPOINT"
+                sleep 10
+              done
+          env:
+            - name: HOME
+              value: /tmp
+            - name: ENDPOINT
+              value: {{ .Values.s3.endpoint | quote }}
+            - name: BUCKET
+              value: {{ .Values.s3.bucketnames | quote }}
+            - name: AWS_DEFAULT_REGION
+              value: {{ .Values.s3.region | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: loki-s3-secret
+                  key: access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: loki-s3-secret
+                  key: access_key_secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
