@@ -25,6 +25,7 @@ spec:
     mcpCatalog: true
     guardrails: true
     autorag: true
+    automl: true
   hardwareProfileOrder: []
   notebookController:
     enabled: true
