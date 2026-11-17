@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: models-as-a-service
+  labels:
+    opendatahub.io/dashboard: 'true'
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
