@@ -19,11 +19,11 @@ spec:
       valuesObject:
         storageClassName: "{{ .Values.logging.storageClassName }}"
         s3:
-          access_key_id: "{{ .Values.s4.access_key_id }}"
-          access_key_secret: "{{ .Values.s4.access_key_secret }}"
+          access_key_id: "{{ .Values.seaweedfs.access_key_id }}"
+          access_key_secret: "{{ .Values.seaweedfs.access_key_secret }}"
           bucketnames: "{{ .Values.logging.bucket }}"
-          endpoint: "{{ .Values.s4.endpoint }}"
-          region: "{{ .Values.s4.region }}"
+          endpoint: "{{ .Values.seaweedfs.endpoint }}"
+          region: "{{ .Values.seaweedfs.region }}"
   syncPolicy:
     automated:
       prune: true

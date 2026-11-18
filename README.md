@@ -28,8 +28,7 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── ogx.yaml                   # OGX server for RAG (optional)
     ├── evalhub.yaml               # TrustyAI EvalHub for model evaluation (optional)
     ├── auto.yaml                  # AutoML and AutoRAG project and pipeline server (optional)
-    ├── s4.yaml                    # S4 S3-compatible storage for the LokiStack bucket
-    ├── seaweedfs.yaml             # SeaweedFS S3-compatible storage for the pipeline bucket
+    ├── seaweedfs.yaml             # SeaweedFS S3-compatible storage for all buckets
     └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
@@ -43,7 +42,6 @@ deployments/                       # Individual Helm charts
 ├── mlflow/                        # MLflow tracking server
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription
-├── s4/                            # S4 storage and bucket creation
 ├── seaweedfs/                     # SeaweedFS storage and bucket creation
 └── users/                         # Admin groups and RBAC
 ```
@@ -53,15 +51,15 @@ deployments/                       # Individual Helm charts
 - Red Hat OpenShift GitOps installed on the cluster
 - Every user listed in `users.clusterAdmins` must already exist on the cluster (defaults to `dieter`). See [Cluster administrators](#cluster-administrators).
 
-S3 storage doesn't need to be provisioned up front. Two in-cluster S3-compatible storage servers create every bucket used in this project: [S4](https://github.com/rh-aiservices-bu/s4) serves the LokiStack bucket and [SeaweedFS](https://github.com/seaweedfs/seaweedfs) serves the AutoML/AutoRAG pipeline bucket. Apps that use a bucket wait until their storage server is up and the bucket exists.
+S3 storage doesn't need to be provisioned up front: the `seaweedfs` chart deploys [SeaweedFS](https://github.com/seaweedfs/seaweedfs), an S3-compatible storage server, in the `seaweedfs` namespace and creates every bucket used in this project (LokiStack logs and the AutoML/AutoRAG pipeline artifacts). Apps that use a bucket wait until SeaweedFS is up and their bucket exists.
 
 ## Configuration
 
-Sensitive values (S4 and SeaweedFS credentials, API keys) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
+Sensitive values (SeaweedFS credentials, API keys) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
 
 ```bash
 cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
-# Edit bootstrap/values.secret.yaml with your S4 and SeaweedFS credentials and other secrets
+# Edit bootstrap/values.secret.yaml with your SeaweedFS credentials and other secrets
 ```
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
@@ -159,27 +157,11 @@ The `evalhub` chart deploys TrustyAI EvalHub with a PostgreSQL database in the `
 
 The providers, benchmark collections, MLflow tracking URI and database settings are in `deployments/evalhub/values.yaml`. EvalHub runs single-tenant: it serves only the `evalhub` namespace, where evaluation jobs run.
 
-### S4 storage
-
-The `s4` chart is always deployed. It runs [S4](https://github.com/rh-aiservices-bu/s4) in the `s4` namespace with a 50Gi volume and creates the LokiStack bucket (`logging.bucket` in `bootstrap/values.yaml`). The S3 API is only reachable inside the cluster, at `http://s4.s4.svc.cluster.local:7480`.
-
-S4 also has a web console for browsing buckets and uploading or downloading files. To open it, get the URL of its route:
-
-```bash
-echo https://$(oc get route s4 -n s4 -o jsonpath='{.spec.host}')
-```
-
-Log in with the `ui_username` and `ui_password` from the `s4` section of `bootstrap/values.secret.yaml`. The same section holds the S3 access key (`access_key_id`) and secret key (`access_key_secret`) for S3 clients. All four values are also stored in the `s4-credentials` secret in the `s4` namespace:
-
-```bash
-oc extract secret/s4-credentials -n s4 --to=-
-```
-
 ### SeaweedFS storage
 
-The `seaweedfs` chart is always deployed. It runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) as a single pod on a single 50Gi volume in the `seaweedfs` namespace: the master, volume server, filer and S3 gateway run in one process, and object data and metadata share the volume. It creates the AutoML/AutoRAG pipeline bucket (`auto.bucket` in `bootstrap/values.yaml`) when `auto.enabled` is true. The S3 API is only reachable inside the cluster, at `http://seaweedfs.seaweedfs.svc.cluster.local:8333`.
+The `seaweedfs` chart is always deployed. It runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) as a single pod on a single 50Gi volume in the `seaweedfs` namespace: the master, volume server, filer and S3 gateway run in one process, and object data and metadata share the volume. It creates every bucket used in this project, both set in `bootstrap/values.yaml`: the LokiStack bucket (`logging.bucket`) and, when `auto.enabled` is true, the AutoML/AutoRAG pipeline bucket (`auto.bucket`). The S3 API is only reachable inside the cluster, at `http://seaweedfs.seaweedfs.svc.cluster.local:8333`.
 
-The pipeline bucket moved from S4 to SeaweedFS because S4 can't store multipart uploads with long object keys: AutoML model files have keys of about 240 characters, and S4 fails those uploads with HTTP 500.
+This project used [S4](https://github.com/rh-aiservices-bu/s4) before. It was replaced because S4 can't store multipart uploads with long object keys: AutoML model files have keys of about 240 characters, and S4 fails those uploads with HTTP 500.
 
 SeaweedFS also has an admin web UI for browsing buckets and files, checking volume and cluster status, and managing S3 users. To open it, get the URL of its route:
 

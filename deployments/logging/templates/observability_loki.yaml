@@ -9,7 +9,7 @@ stringData:
   bucketnames: {{ .Values.s3.bucketnames | quote }}
   endpoint: {{ .Values.s3.endpoint | quote }}
   region: {{ .Values.s3.region | quote }}
-  # S4 serves buckets by path, not by virtual host
+  # SeaweedFS serves buckets by path, not by virtual host
   forcepathstyle: "true"
 type: Opaque
 ---

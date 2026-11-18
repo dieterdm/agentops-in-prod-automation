@@ -7,16 +7,9 @@ bootstrap:
   # Branch or tag to use
   targetRevision: opencode
 
-s4:
-  # S4 serves the LokiStack bucket. The credentials are in values.secret.yaml.
-  endpoint: http://s4.s4.svc.cluster.local:7480
-  region: us-east-1
-  storageSize: 50Gi
-  storageClassName: kubevirt-csi-infra-default
-
 seaweedfs:
-  # SeaweedFS serves the auto pipeline bucket: a single pod on a single volume.
-  # The credentials are in values.secret.yaml.
+  # SeaweedFS serves every S3 bucket used in this project: a single pod on a
+  # single volume. The credentials are in values.secret.yaml.
   endpoint: http://seaweedfs.seaweedfs.svc.cluster.local:8333
   region: us-east-1
   storageSize: 50Gi
@@ -25,7 +18,7 @@ seaweedfs:
 logging:
   # Storage class used by the LokiStack PVCs
   storageClassName: kubevirt-csi-infra-default
-  # S4 bucket for the LokiStack
+  # SeaweedFS bucket for the LokiStack
   bucket: loki
 
 users:

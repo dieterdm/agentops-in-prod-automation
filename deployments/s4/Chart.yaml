@@ -1,8 +1,0 @@
-apiVersion: v2
-name: s4
-description: >
-  A helm chart to deploy S4 (Super Simple Storage Service), the S3-compatible
-  storage that serves all buckets used in this project, in the s4 namespace
-type: application
-version: 0.1.0
-appVersion: 0.4.1

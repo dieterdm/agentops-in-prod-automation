@@ -1,5 +1,6 @@
-# Blocks the sync until the S3 bucket exists in S4, so the LokiStack (a later
-# sync wave) only starts once S4 is up and the s4 app has created the bucket.
+# Blocks the sync until the S3 bucket exists in SeaweedFS, so the LokiStack (a later
+# sync wave) only starts once SeaweedFS is up and the seaweedfs app has created the
+# bucket.
 # A Sync hook, so it is recreated (and waits again) on every sync.
 apiVersion: batch/v1
 kind: Job

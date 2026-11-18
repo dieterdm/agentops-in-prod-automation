@@ -20,12 +20,11 @@ spec:
         storage:
           size: "{{ .Values.seaweedfs.storageSize }}"
           storageClassName: "{{ .Values.seaweedfs.storageClassName }}"
-        # Buckets served by SeaweedFS
+        # Every bucket used in this project
         buckets:
+          - "{{ .Values.logging.bucket }}"
           {{- if .Values.auto.enabled }}
           - "{{ .Values.auto.bucket }}"
-          {{- else }}
-          []
           {{- end }}
   syncPolicy:
     automated:
