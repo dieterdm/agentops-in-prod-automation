@@ -1,0 +1,140 @@
+{{- if .Values.playgroundCaBundleWorkaround.enabled }}
+{{- $ns := .Values.playgroundCaBundleWorkaround.namespace }}
+# TEMPORARY WORKAROUND for the gen AI playground in RHOAI 3.6 EA2.
+# Issue: https://redhat.atlassian.net/browse/RHAI-49413
+#
+# MaaS models (such as gpt-oss-20b) are missing from the playground because of
+# a CA trust mismatch. The cluster uses a custom default ingress certificate,
+# signed by the cluster's self-signed root CA (OU=openshift, CN=root-ca). The
+# OGX operator fills the playground's ogx-router-ca-bundle ConfigMap with only
+# the router CA, which didn't sign the certificate served by the dashboard
+# route, so OGX can't verify it.
+#
+# This CronJob copies the root CA from the kube-root-ca.crt ConfigMap into
+# ogx-router-ca-bundle whenever it's missing, then restarts the playground's
+# OGX deployment so it picks up the new bundle. It runs on a schedule because
+# the playground is created from the dashboard (so the ConfigMap may not exist
+# yet) and the operator may rewrite the bundle.
+#
+# Remove this file and the playgroundCaBundleWorkaround values once
+# RHAI-49413 is fixed.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: playground-ca-bundle-patcher
+  namespace: {{ $ns }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: playground-ca-bundle-patcher
+  namespace: {{ $ns }}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["kube-root-ca.crt", "ogx-router-ca-bundle"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["ogx-router-ca-bundle"]
+  verbs: ["update", "patch"]
+# Restart the playground's OGX deployment, named after its OGXServer
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: playground-ca-bundle-patcher
+  namespace: {{ $ns }}
+subjects:
+- kind: ServiceAccount
+  name: playground-ca-bundle-patcher
+  namespace: {{ $ns }}
+roleRef:
+  kind: Role
+  name: playground-ca-bundle-patcher
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: playground-ca-bundle-patcher
+  namespace: {{ $ns }}
+spec:
+  schedule: {{ .Values.playgroundCaBundleWorkaround.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: playground-ca-bundle-patcher
+          restartPolicy: Never
+          containers:
+          - name: patch
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              NS={{ $ns }}
+              CM=ogx-router-ca-bundle
+              KEY=ca-bundle.crt
+
+              if ! oc get configmap "$CM" -n "$NS" >/dev/null 2>&1; then
+                echo "ConfigMap $CM doesn't exist (yet), nothing to do"
+                exit 0
+              fi
+              command -v openssl >/dev/null || { echo "openssl not found in image"; exit 1; }
+
+              WORK=$(mktemp -d)
+              oc get configmap kube-root-ca.crt -n "$NS" -o jsonpath='{.data.ca\.crt}' > "$WORK/kube.pem"
+              oc get configmap "$CM" -n "$NS" -o jsonpath='{.data.ca-bundle\.crt}' > "$WORK/bundle.pem"
+
+              # Split kube-root-ca.crt into one file per certificate and pick
+              # the self-signed one (subject equals issuer)
+              awk -v dir="$WORK" '/-----BEGIN CERTIFICATE-----/{n++} n{print > (dir "/kube-" n ".pem")}' "$WORK/kube.pem"
+              ROOT=""
+              for cert in "$WORK"/kube-*.pem; do
+                subject=$(openssl x509 -in "$cert" -noout -subject -nameopt RFC2253 | sed 's/^subject=//')
+                issuer=$(openssl x509 -in "$cert" -noout -issuer -nameopt RFC2253 | sed 's/^issuer=//')
+                if [ "$subject" = "$issuer" ]; then
+                  ROOT=$cert
+                  echo "Self-signed root CA in kube-root-ca.crt: $subject"
+                  break
+                fi
+              done
+              [ -n "$ROOT" ] || { echo "No self-signed certificate found in kube-root-ca.crt"; exit 1; }
+
+              if tr -d '\n\r ' < "$WORK/bundle.pem" | grep -qF -- "$(tr -d '\n\r ' < "$ROOT")"; then
+                echo "$CM already contains the root CA"
+                exit 0
+              fi
+
+              { cat "$WORK/bundle.pem"; [ -z "$(tail -c1 "$WORK/bundle.pem")" ] || echo; cat "$ROOT"; } > "$WORK/new-bundle.pem"
+              oc set data configmap/"$CM" -n "$NS" --from-file="$KEY=$WORK/new-bundle.pem"
+              echo "Added the root CA to $CM"
+
+              # The ConfigMap is owned by the playground OGXServer, whose
+              # deployment has the same name. Restart it to load the new bundle.
+              OGX=$(oc get configmap "$CM" -n "$NS" -o jsonpath='{.metadata.ownerReferences[?(@.kind=="OGXServer")].name}')
+              if [ -n "$OGX" ] && oc get deployment "$OGX" -n "$NS" >/dev/null 2>&1; then
+                oc rollout restart deployment/"$OGX" -n "$NS"
+                echo "Restarted deployment $OGX"
+              else
+                echo "No OGX deployment found for $CM, restart the playground manually"
+              fi
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                - ALL
+              seccompProfile:
+                type: RuntimeDefault
+{{- end }}

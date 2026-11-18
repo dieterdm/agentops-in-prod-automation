@@ -73,3 +73,13 @@ maas_external_provider:
   enabled: false
   api_key: needupdate
   endpoint: needupdate
+# TEMPORARY WORKAROUND for https://redhat.atlassian.net/browse/RHAI-49413:
+# add the cluster's self-signed root CA from kube-root-ca.crt to the gen AI
+# playground's ogx-router-ca-bundle ConfigMap, so the playground trusts the
+# dashboard route and shows the MaaS models. See
+# templates/playground-ca-bundle-workaround.yaml.
+playgroundCaBundleWorkaround:
+  enabled: true
+  # Namespace of the playground OGXServer
+  namespace: models-as-a-service
+  schedule: "*/5 * * * *"

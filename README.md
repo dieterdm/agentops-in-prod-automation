@@ -184,6 +184,20 @@ The `auto` chart turns both features on in the dashboard and creates an `auto` d
 
 To try them out, open the `auto` project in the OpenShift AI dashboard. Sample data and example notebooks are available in the [red-hat-ai-examples](https://github.com/red-hat-data-services/red-hat-ai-examples/tree/main/examples) repository.
 
+## Known issues
+
+### MaaS models missing from the gen AI playground (RHOAI 3.6 EA2)
+
+Tracked in [RHAI-49413](https://redhat.atlassian.net/browse/RHAI-49413).
+
+MaaS models such as `gpt-oss-20b` didn't show up in the gen AI playground. We traced this to a CA trust mismatch. The cluster uses a custom default ingress certificate, signed by the cluster's self-signed root CA (`OU=openshift, CN=root-ca`). The playground's OGX server trusts the certificates in the `ogx-router-ca-bundle` ConfigMap, but the OGX operator puts only the router CA in that bundle. The router CA didn't sign the certificate served by the dashboard route, so OGX couldn't verify it.
+
+Adding the root CA from `models-as-a-service/kube-root-ca.crt` to `ogx-router-ca-bundle` and restarting the OGX deployment made the model appear in the playground.
+
+The `openshift-ai` chart automates this with a temporary workaround, [playground-ca-bundle-workaround.yaml](deployments/openshift-ai/templates/playground-ca-bundle-workaround.yaml). A CronJob in `models-as-a-service` checks every 5 minutes whether `ogx-router-ca-bundle` contains the root CA. If it doesn't, the CronJob adds it and restarts the playground's OGX deployment. It does nothing until a playground has been created.
+
+The workaround is controlled by `playgroundCaBundleWorkaround` in `deployments/openshift-ai/values.yaml`. Set `enabled: false`, or remove the template and the values block, once RHAI-49413 is fixed.
+
 ## Deployment
 
 Deploy the bootstrap Helm chart to kick off the app-of-apps:
