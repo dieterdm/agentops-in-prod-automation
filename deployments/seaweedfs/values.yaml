@@ -1,0 +1,18 @@
+image: docker.io/chrislusf/seaweedfs:4.54
+region: us-east-1
+
+# Secret with s3.json (the S3 identities) and AWS_ACCESS_KEY_ID and
+# AWS_SECRET_ACCESS_KEY (for the bucket Job), created by the bootstrap chart
+# from values.secret.yaml
+credentialsSecret: seaweedfs-s3-config
+
+storage:
+  size: 50Gi
+  # Empty uses the cluster's default storage class
+  storageClassName: ""
+
+# Buckets created after SeaweedFS is up. Set by the bootstrap chart.
+buckets: []
+
+# Image with the AWS CLI, used to create the buckets
+awsCliImage: public.ecr.aws/aws-cli/aws-cli:latest

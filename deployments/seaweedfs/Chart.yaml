@@ -1,0 +1,8 @@
+apiVersion: v2
+name: seaweedfs
+description: >
+  A helm chart to deploy SeaweedFS as a single-pod, single-volume S3-compatible
+  storage server in the seaweedfs namespace
+type: application
+version: 0.1.0
+appVersion: "4.54"

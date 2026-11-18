@@ -8,9 +8,16 @@ bootstrap:
   targetRevision: opencode
 
 s4:
-  # S4 serves every S3 bucket used in this project. The credentials are in
-  # values.secret.yaml.
+  # S4 serves the LokiStack bucket. The credentials are in values.secret.yaml.
   endpoint: http://s4.s4.svc.cluster.local:7480
+  region: us-east-1
+  storageSize: 50Gi
+  storageClassName: kubevirt-csi-infra-default
+
+seaweedfs:
+  # SeaweedFS serves the auto pipeline bucket: a single pod on a single volume.
+  # The credentials are in values.secret.yaml.
+  endpoint: http://seaweedfs.seaweedfs.svc.cluster.local:8333
   region: us-east-1
   storageSize: 50Gi
   storageClassName: kubevirt-csi-infra-default
@@ -44,7 +51,8 @@ auto:
   # Enable AutoML and AutoRAG in the OpenShift AI dashboard and create the auto
   # data science project to run them in.
   enabled: true
-  # S4 bucket for the auto pipeline server artifacts
+  # SeaweedFS bucket for the auto pipeline server artifacts and the
+  # auto-pipelines dashboard connection
   bucket: auto-pipelines
 
 openshiftai:

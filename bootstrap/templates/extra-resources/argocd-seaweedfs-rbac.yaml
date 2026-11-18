@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: seaweedfs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-admin
+  namespace: seaweedfs
+subjects:
+- kind: ServiceAccount
+  name: openshift-gitops-argocd-application-controller
+  namespace: openshift-gitops
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
+---
+# Created by the bootstrap chart rather than the seaweedfs Argo CD app, so the
+# credentials from values.secret.yaml never end up in git or in an Application.
+# s3.json defines the single admin S3 identity; the AWS_* keys are the same
+# credentials for the bucket creation Job.
+{{- $accessKey := required "seaweedfs.access_key_id is required in values.secret.yaml" .Values.seaweedfs.access_key_id }}
+{{- $secretKey := required "seaweedfs.access_key_secret is required in values.secret.yaml" .Values.seaweedfs.access_key_secret }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: seaweedfs-s3-config
+  namespace: seaweedfs
+type: Opaque
+stringData:
+  AWS_ACCESS_KEY_ID: {{ $accessKey | quote }}
+  AWS_SECRET_ACCESS_KEY: {{ $secretKey | quote }}
+  s3.json: |
+    {{- dict "identities" (list (dict "name" "admin" "credentials" (list (dict "accessKey" $accessKey "secretKey" $secretKey)) "actions" (list "Admin" "Read" "List" "Tagging" "Write"))) | toPrettyJson | nindent 4 }}

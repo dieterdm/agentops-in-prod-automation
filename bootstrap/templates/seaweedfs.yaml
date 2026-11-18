@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: seaweedfs
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    name: in-cluster
+    namespace: seaweedfs
+  project: default
+  source:
+    path: deployments/seaweedfs
+    repoURL: {{ .Values.bootstrap.repoURL }}
+    targetRevision: {{ .Values.bootstrap.targetRevision }}
+    helm:
+      valuesObject:
+        region: "{{ .Values.seaweedfs.region }}"
+        storage:
+          size: "{{ .Values.seaweedfs.storageSize }}"
+          storageClassName: "{{ .Values.seaweedfs.storageClassName }}"
+        # Buckets served by SeaweedFS
+        buckets:
+          {{- if .Values.auto.enabled }}
+          - "{{ .Values.auto.bucket }}"
+          {{- else }}
+          []
+          {{- end }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -28,7 +28,8 @@ bootstrap/                         # ArgoCD app-of-apps parent chart
     ├── ogx.yaml                   # OGX server for RAG (optional)
     ├── evalhub.yaml               # TrustyAI EvalHub for model evaluation (optional)
     ├── auto.yaml                  # AutoML and AutoRAG project and pipeline server (optional)
-    ├── s4.yaml                    # S4 S3-compatible storage for all buckets
+    ├── s4.yaml                    # S4 S3-compatible storage for the LokiStack bucket
+    ├── seaweedfs.yaml             # SeaweedFS S3-compatible storage for the pipeline bucket
     └── extra-resources/           # Namespaces, operators, RBAC
 
 deployments/                       # Individual Helm charts
@@ -43,6 +44,7 @@ deployments/                       # Individual Helm charts
 ├── openshift-ai/                  # RHOAI DataScienceCluster
 ├── openshift-ai-operator/         # RHOAI operator subscription
 ├── s4/                            # S4 storage and bucket creation
+├── seaweedfs/                     # SeaweedFS storage and bucket creation
 └── users/                         # Admin groups and RBAC
 ```
 
@@ -51,15 +53,15 @@ deployments/                       # Individual Helm charts
 - Red Hat OpenShift GitOps installed on the cluster
 - Every user listed in `users.clusterAdmins` must already exist on the cluster (defaults to `dieter`). See [Cluster administrators](#cluster-administrators).
 
-S3 storage doesn't need to be provisioned up front: the `s4` chart deploys [S4](https://github.com/rh-aiservices-bu/s4), an S3-compatible storage server, in the `s4` namespace and creates every bucket used in this project (LokiStack logs and the AutoML/AutoRAG pipeline artifacts). Apps that use a bucket wait until S4 is up and their bucket exists.
+S3 storage doesn't need to be provisioned up front. Two in-cluster S3-compatible storage servers create every bucket used in this project: [S4](https://github.com/rh-aiservices-bu/s4) serves the LokiStack bucket and [SeaweedFS](https://github.com/seaweedfs/seaweedfs) serves the AutoML/AutoRAG pipeline bucket. Apps that use a bucket wait until their storage server is up and the bucket exists.
 
 ## Configuration
 
-Sensitive values (S4 credentials, API keys) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
+Sensitive values (S4 and SeaweedFS credentials, API keys) are kept in a separate file that is not checked into git. Copy the example and fill in your values:
 
 ```bash
 cp bootstrap/values.secret.yaml.example bootstrap/values.secret.yaml
-# Edit bootstrap/values.secret.yaml with your S4 credentials and other secrets
+# Edit bootstrap/values.secret.yaml with your S4 and SeaweedFS credentials and other secrets
 ```
 
 Update `bootstrap/values.yaml` and `deployments/openshift-ai/values.yaml` with your cluster's domain and TLS certificate name:
@@ -159,7 +161,7 @@ The providers, benchmark collections, MLflow tracking URI and database settings 
 
 ### S4 storage
 
-The `s4` chart is always deployed. It runs [S4](https://github.com/rh-aiservices-bu/s4) in the `s4` namespace with a 50Gi volume and creates the buckets listed in `bootstrap/values.yaml` (`logging.bucket`, and `auto.bucket` when `auto.enabled` is true). The S3 API is only reachable inside the cluster, at `http://s4.s4.svc.cluster.local:7480`.
+The `s4` chart is always deployed. It runs [S4](https://github.com/rh-aiservices-bu/s4) in the `s4` namespace with a 50Gi volume and creates the LokiStack bucket (`logging.bucket` in `bootstrap/values.yaml`). The S3 API is only reachable inside the cluster, at `http://s4.s4.svc.cluster.local:7480`.
 
 S4 also has a web console for browsing buckets and uploading or downloading files. To open it, get the URL of its route:
 
@@ -173,6 +175,14 @@ Log in with the `ui_username` and `ui_password` from the `s4` section of `bootst
 oc extract secret/s4-credentials -n s4 --to=-
 ```
 
+### SeaweedFS storage
+
+The `seaweedfs` chart is always deployed. It runs [SeaweedFS](https://github.com/seaweedfs/seaweedfs) as a single pod on a single 50Gi volume in the `seaweedfs` namespace: the master, volume server, filer and S3 gateway run in one process, and object data and metadata share the volume. It creates the AutoML/AutoRAG pipeline bucket (`auto.bucket` in `bootstrap/values.yaml`) when `auto.enabled` is true. The S3 API is only reachable inside the cluster, at `http://seaweedfs.seaweedfs.svc.cluster.local:8333`.
+
+The pipeline bucket moved from S4 to SeaweedFS because S4 can't store multipart uploads with long object keys: AutoML model files have keys of about 240 characters, and S4 fails those uploads with HTTP 500.
+
+The S3 access key (`access_key_id`) and secret key (`access_key_secret`) are in the `seaweedfs` section of `bootstrap/values.secret.yaml`, and in the `seaweedfs-s3-config` secret in the `seaweedfs` namespace.
+
 ### AutoML and AutoRAG (optional)
 
 AutoML and AutoRAG are OpenShift AI dashboard features that run automated experiments as pipelines:
@@ -180,7 +190,7 @@ AutoML and AutoRAG are OpenShift AI dashboard features that run automated experi
 - **AutoML** trains and compares several machine learning models on a tabular dataset and ranks them, so you can pick the best one to deploy.
 - **AutoRAG** tries out different retrieval-augmented generation (RAG) configurations (for example chunking, embedding and retrieval settings) on your documents and ranks them on answer quality.
 
-The `auto` chart turns both features on in the dashboard and creates an `auto` data science project to run them in. The project has a pipeline server (`DataSciencePipelinesApplication`) that stores its artifacts in the `auto-pipelines` bucket in S4. The project also gets an `auto-pipelines` S3 connection to that bucket, which you can select in AutoML and AutoRAG to upload your data. It is enabled by default. To skip it, set `auto.enabled: false` in `bootstrap/values.yaml`; AutoML and AutoRAG are then hidden in the dashboard.
+The `auto` chart turns both features on in the dashboard and creates an `auto` data science project to run them in. The project has a pipeline server (`DataSciencePipelinesApplication`) that stores its artifacts in the `auto-pipelines` bucket in SeaweedFS. The project also gets an `auto-pipelines` S3 connection to that bucket, which you can select in AutoML and AutoRAG to upload your data. It is enabled by default. To skip it, set `auto.enabled: false` in `bootstrap/values.yaml`; AutoML and AutoRAG are then hidden in the dashboard.
 
 To try them out, open the `auto` project in the OpenShift AI dashboard. Sample data and example notebooks are available in the [red-hat-ai-examples](https://github.com/red-hat-data-services/red-hat-ai-examples/tree/main/examples) repository.
 

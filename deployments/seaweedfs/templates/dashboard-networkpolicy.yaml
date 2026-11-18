@@ -1,0 +1,32 @@
+# The OpenShift AI operator restricts egress of the AutoML and AutoRAG dashboard
+# pods to ports 80, 443, 8443 and 9000 (the *-allow-ports policies). SeaweedFS
+# serves the S3 API on 8333, so without this policy uploading files to a
+# SeaweedFS connection in the dashboard fails with "Unable to connect to the S3
+# storage endpoint". Network policies are additive, so this only adds the
+# SeaweedFS port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-seaweedfs
+  namespace: redhat-ods-applications
+spec:
+  podSelector:
+    matchExpressions:
+      - key: deployment
+        operator: In
+        values:
+          - automl-ui
+          - autorag-ui
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+          podSelector:
+            matchLabels:
+              app: seaweedfs
+      ports:
+        - port: 8333
+          protocol: TCP

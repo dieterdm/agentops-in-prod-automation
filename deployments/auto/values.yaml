@@ -1,10 +1,10 @@
 # Pipeline server for the AutoML and AutoRAG pipelines in the auto namespace
 dspa:
   name: dspa
-  # S4 bucket for pipeline artifacts. The credentials are in the connection
+  # SeaweedFS bucket for pipeline artifacts. The credentials are in the connection
   # secret named after the bucket, created by the bootstrap chart.
   objectStorage:
-    # Full URL, for example http://s4.s4.svc.cluster.local:7480
+    # Full URL, for example http://seaweedfs.seaweedfs.svc.cluster.local:8333
     endpoint: needupdate
     bucket: needupdate
     region: us-east-1

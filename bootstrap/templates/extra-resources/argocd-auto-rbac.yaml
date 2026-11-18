@@ -55,11 +55,11 @@ roleRef:
   name: argocd-dspa-manager
   apiGroup: rbac.authorization.k8s.io
 ---
-# S3 connection to the auto bucket in S4. The dashboard shows it as a
+# S3 connection to the auto bucket in SeaweedFS. The dashboard shows it as a
 # connection in the auto project (used by AutoML and AutoRAG), and the pipeline
 # server uses it for its artifacts. Created by the bootstrap chart rather than
-# the auto Argo CD app, so the S4 credentials from values.secret.yaml never end
-# up in git or in an Application.
+# the auto Argo CD app, so the SeaweedFS credentials from values.secret.yaml
+# never end up in git or in an Application.
 apiVersion: v1
 kind: Secret
 metadata:
@@ -75,9 +75,9 @@ metadata:
     openshift.io/display-name: {{ .Values.auto.bucket }}
 type: Opaque
 stringData:
-  AWS_ACCESS_KEY_ID: {{ required "s4.access_key_id is required in values.secret.yaml" .Values.s4.access_key_id | quote }}
-  AWS_SECRET_ACCESS_KEY: {{ required "s4.access_key_secret is required in values.secret.yaml" .Values.s4.access_key_secret | quote }}
-  AWS_S3_ENDPOINT: {{ .Values.s4.endpoint | quote }}
+  AWS_ACCESS_KEY_ID: {{ required "seaweedfs.access_key_id is required in values.secret.yaml" .Values.seaweedfs.access_key_id | quote }}
+  AWS_SECRET_ACCESS_KEY: {{ required "seaweedfs.access_key_secret is required in values.secret.yaml" .Values.seaweedfs.access_key_secret | quote }}
+  AWS_S3_ENDPOINT: {{ .Values.seaweedfs.endpoint | quote }}
   AWS_S3_BUCKET: {{ .Values.auto.bucket | quote }}
-  AWS_DEFAULT_REGION: {{ .Values.s4.region | quote }}
+  AWS_DEFAULT_REGION: {{ .Values.seaweedfs.region | quote }}
 {{- end }}

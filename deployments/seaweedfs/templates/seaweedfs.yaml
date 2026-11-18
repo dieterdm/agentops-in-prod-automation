@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seaweedfs-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.storage.storageClassName }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}
+---
+# A complete SeaweedFS cluster in one process: master, volume server, filer
+# and S3 gateway. Object data (volume files) and metadata (master and filer
+# LevelDB) all live on the single /data volume. The components talk to each
+# other over localhost; only the S3 API is exposed through the Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seaweedfs
+  labels:
+    app: seaweedfs
+spec:
+  # Single process with local LevelDB metadata, so only one replica
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: seaweedfs
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: seaweedfs
+          image: {{ .Values.image }}
+          # The image entrypoint adds -dir=/data -volume.max=0
+          # -master.volumeSizeLimitMB=1024 and drops root when needed
+          args:
+            - server
+            - -ip=127.0.0.1
+            - -ip.bind=0.0.0.0
+            - -filer
+            - -s3
+            - -s3.port=8333
+            - -s3.config=/etc/seaweedfs-s3/s3.json
+          ports:
+            - name: s3-api
+              containerPort: 8333
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: s3-config
+              mountPath: /etc/seaweedfs-s3
+              readOnly: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: s3-api
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: s3-api
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: seaweedfs-data
+        - name: s3-config
+          secret:
+            secretName: {{ .Values.credentialsSecret }}
+            items:
+              - key: s3.json
+                path: s3.json
+---
+# S3 API on port 8333 (in-cluster only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs
+  labels:
+    app: seaweedfs
+spec:
+  type: ClusterIP
+  selector:
+    app: seaweedfs
+  ports:
+    - name: s3-api
+      port: 8333
+      targetPort: s3-api
+      protocol: TCP

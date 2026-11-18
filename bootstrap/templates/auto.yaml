@@ -19,9 +19,9 @@ spec:
       valuesObject:
         dspa:
           objectStorage:
-            endpoint: "{{ .Values.s4.endpoint }}"
+            endpoint: "{{ .Values.seaweedfs.endpoint }}"
             bucket: "{{ .Values.auto.bucket }}"
-            region: "{{ .Values.s4.region }}"
+            region: "{{ .Values.seaweedfs.region }}"
             # Connection secret created by the bootstrap chart
             credentialsSecret: "{{ .Values.auto.bucket }}"
   syncPolicy:

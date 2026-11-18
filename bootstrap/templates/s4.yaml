@@ -20,12 +20,9 @@ spec:
         storage:
           size: "{{ .Values.s4.storageSize }}"
           storageClassName: "{{ .Values.s4.storageClassName }}"
-        # Every bucket used in this project
+        # Buckets served by S4. The auto bucket is in SeaweedFS.
         buckets:
           - "{{ .Values.logging.bucket }}"
-          {{- if .Values.auto.enabled }}
-          - "{{ .Values.auto.bucket }}"
-          {{- end }}
   syncPolicy:
     automated:
       prune: true
