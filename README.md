@@ -181,7 +181,17 @@ The `seaweedfs` chart is always deployed. It runs [SeaweedFS](https://github.com
 
 The pipeline bucket moved from S4 to SeaweedFS because S4 can't store multipart uploads with long object keys: AutoML model files have keys of about 240 characters, and S4 fails those uploads with HTTP 500.
 
-The S3 access key (`access_key_id`) and secret key (`access_key_secret`) are in the `seaweedfs` section of `bootstrap/values.secret.yaml`, and in the `seaweedfs-s3-config` secret in the `seaweedfs` namespace.
+SeaweedFS also has an admin web UI for browsing buckets and files, checking volume and cluster status, and managing S3 users. To open it, get the URL of its route:
+
+```bash
+echo https://$(oc get route seaweedfs -n seaweedfs -o jsonpath='{.spec.host}')
+```
+
+Log in with the `ui_username` and `ui_password` from the `seaweedfs` section of `bootstrap/values.secret.yaml`. The same section holds the S3 access key (`access_key_id`) and secret key (`access_key_secret`) for S3 clients. All four values are also stored in the `seaweedfs-s3-config` secret in the `seaweedfs` namespace:
+
+```bash
+oc extract secret/seaweedfs-s3-config -n seaweedfs --keys=UI_USERNAME,UI_PASSWORD,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY --to=-
+```
 
 ### AutoML and AutoRAG (optional)
 

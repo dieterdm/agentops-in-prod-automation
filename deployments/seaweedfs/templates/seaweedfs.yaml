@@ -15,7 +15,9 @@ spec:
 # A complete SeaweedFS cluster in one process: master, volume server, filer
 # and S3 gateway. Object data (volume files) and metadata (master and filer
 # LevelDB) all live on the single /data volume. The components talk to each
-# other over localhost; only the S3 API is exposed through the Service.
+# other over localhost. The admin container runs the SeaweedFS admin web UI,
+# with login, against the same master. The Service exposes the S3 API and the
+# admin UI; the master and filer UIs (no login) stay inside the pod.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -89,6 +91,55 @@ spec:
                 - ALL
             seccompProfile:
               type: RuntimeDefault
+        - name: admin
+          image: {{ .Values.image }}
+          command:
+            - /bin/sh
+            - -c
+            - mkdir -p /data/admin && exec /usr/bin/weed -logtostderr=true admin -port=12535 -port.legacy=0 -master=localhost:9333 -dataDir=/data/admin
+          env:
+            - name: WEED_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: UI_USERNAME
+            - name: WEED_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: UI_PASSWORD
+          ports:
+            - name: admin-ui
+              containerPort: 12535
+              protocol: TCP
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            tcpSocket:
+              port: admin-ui
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: admin-ui
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -100,7 +151,7 @@ spec:
               - key: s3.json
                 path: s3.json
 ---
-# S3 API on port 8333 (in-cluster only)
+# S3 API on port 8333 (in-cluster only) and the admin UI on port 12535
 apiVersion: v1
 kind: Service
 metadata:
@@ -116,3 +167,25 @@ spec:
       port: 8333
       targetPort: s3-api
       protocol: TCP
+    - name: admin-ui
+      port: 12535
+      targetPort: admin-ui
+      protocol: TCP
+---
+# Admin web UI, with login. The S3 API is not exposed outside the cluster.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: seaweedfs
+  labels:
+    app: seaweedfs
+spec:
+  port:
+    targetPort: admin-ui
+  to:
+    kind: Service
+    name: seaweedfs
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

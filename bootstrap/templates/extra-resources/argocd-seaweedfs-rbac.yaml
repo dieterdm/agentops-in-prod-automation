@@ -20,7 +20,7 @@ roleRef:
 # Created by the bootstrap chart rather than the seaweedfs Argo CD app, so the
 # credentials from values.secret.yaml never end up in git or in an Application.
 # s3.json defines the single admin S3 identity; the AWS_* keys are the same
-# credentials for the bucket creation Job.
+# credentials for the bucket creation Job. UI_* is the admin UI login.
 {{- $accessKey := required "seaweedfs.access_key_id is required in values.secret.yaml" .Values.seaweedfs.access_key_id }}
 {{- $secretKey := required "seaweedfs.access_key_secret is required in values.secret.yaml" .Values.seaweedfs.access_key_secret }}
 apiVersion: v1
@@ -32,5 +32,7 @@ type: Opaque
 stringData:
   AWS_ACCESS_KEY_ID: {{ $accessKey | quote }}
   AWS_SECRET_ACCESS_KEY: {{ $secretKey | quote }}
+  UI_USERNAME: {{ required "seaweedfs.ui_username is required in values.secret.yaml" .Values.seaweedfs.ui_username | quote }}
+  UI_PASSWORD: {{ required "seaweedfs.ui_password is required in values.secret.yaml" .Values.seaweedfs.ui_password | quote }}
   s3.json: |
     {{- dict "identities" (list (dict "name" "admin" "credentials" (list (dict "accessKey" $accessKey "secretKey" $secretKey)) "actions" (list "Admin" "Read" "List" "Tagging" "Write"))) | toPrettyJson | nindent 4 }}
